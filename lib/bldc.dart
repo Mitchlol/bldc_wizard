@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:bldc_wizard/ble_uart.dart';
 import 'package:crclib/crclib.dart';
 import 'package:crclib/catalog.dart';
+import 'package:flutter/material.dart';
 
 class BLDC {
   BLEUart uart;
@@ -11,53 +12,44 @@ class BLDC {
     this.uart = uart;
   }
 
+  Future<Null> sendIt(List<int> message) {
+    // Hardcode message for testing
+    message = [0x1d]; // Reboot
+    // message = [0x1e]; // Alive
+    // message = [0x00]; // Get Firmware
 
-  Future<Null> sendIt(List<int> data){
-    // Hardcode firmware version request
-    data = Uint8List(6);
-    // data[0] = 2;
-    // data[1] = 1;
-    // data[2] = 29;
-    // data[3] = int.parse(Crc16().convert([29]).toRadixString(10));
-    // data[4] = 0;
-    // data[5] = 3;
+    // Calculate CRC
+    CrcValue crc = Crc16Xmodem().convert(message);
+    int crcint = int.parse(crc.toRadixString(10));
+    int crcLow = crcint & 0xff;
+    int crcHigh = crcint >> 8;
 
-    // data[0] = 0x02;
-    // data[1] = 0x01;
-    // data[2] = 0x00;
-    // data[3] = 0x00;
-    // data[4] = 0x00;
-    // data[5] = 0x03;
+    // Build request
+    List<int> request = List();
+    request.add(0x02);
+    request.add(message.length);
+    request.addAll(message);
+    request.add(crcHigh);
+    request.add(crcLow);
+    request.add(0x03);
 
+    // Working Reboot Request
+    // request[0] = 0x02;
+    // request[1] = 0x01;
+    // request[2] = 0x1d;
+    // request[3] = 0xc3;
+    // request[4] = 0x9c;
+    // request[5] = 0x03;
 
-    data[0] = 0x02;
-    data[1] = 0x01;
-    data[2] = 0x1d;
-    data[3] = 0xc3;
-    data[4] = 0x9c;
-    data[5] = 0x03;
+    print("Final data = ${request.map((e) => e.toRadixString(16))}");
 
-    // data[5] = 3;
-    // data.add(0);
-    //
-    // int crc = int.parse(Crc16().convert([0]).toRadixString(10));
-    //
-    // print("Data = $data");
-    // print("CRC = $crc");
-    //
-    // data.insert(0, 2);
-    // data.insert(1, 1);
-    // data.add(crc);
-    // data.add(3);
-
-    print("Final data = $data");
-
-    return uart.write(data);
+    return uart.write(request);
   }
 
-  void readIt(){
+  void readIt() {
     uart.read().then((value) => print("Response: $value"), onError: (error) => print("Response Error = $error"));
   }
+
 }
 
 // int PackSendPayload
