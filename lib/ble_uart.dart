@@ -20,6 +20,11 @@ class BLEUart{
   }
   
   Future<bool> init() async{
+    try{
+      await device.disconnect();
+    }catch(e){
+      print(e);
+    }
     await device.connect();
     List<BluetoothService> services = await device.discoverServices();
 
@@ -30,6 +35,9 @@ class BLEUart{
     service = services.firstWhere((BluetoothService service) => service.uuid.toString() == SERVICE_UUID);
     rxCharacteristic = service.characteristics.firstWhere((characteristic) => characteristic.uuid.toString() == RX_UUID);
     txCharacteristic = service.characteristics.firstWhere((characteristic) => characteristic.uuid.toString() == TX_UUID);
+
+    print("char is wat?: ${rxCharacteristic.runtimeType.toString()}");
+    print("char is wat?: ${txCharacteristic.runtimeType.toString()}");
 
     if(service == null){
       throw Exception("Device does not have UART service");
@@ -46,11 +54,11 @@ class BLEUart{
     return true;
   }
   
-  void write(List<int> value){
-    rxCharacteristic.write(value);
+  Future<Null> write(List<int> value){
+    return rxCharacteristic.write(value);
   }
 
-  Future<List<int>> read(List<int> value){
+  Future<List<int>> read(){
     return txCharacteristic.read();
   }
 }

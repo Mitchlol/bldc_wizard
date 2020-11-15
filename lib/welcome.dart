@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bldc_wizard/bldc.dart';
 import 'package:bldc_wizard/ble_uart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -28,7 +29,9 @@ class _WelcomeState extends State<WelcomePage> {
           ),
           Expanded(
             child: StreamBuilder<List<ScanResult>>(
-                stream: Provider.of<FlutterBlue>(context).scanResults,
+                stream: Provider
+                    .of<FlutterBlue>(context)
+                    .scanResults,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
@@ -58,7 +61,9 @@ class _WelcomeState extends State<WelcomePage> {
                 }),
           ),
           StreamBuilder<Object>(
-              stream: Provider.of<FlutterBlue>(context).isScanning,
+              stream: Provider
+                  .of<FlutterBlue>(context)
+                  .isScanning,
               builder: (context, snapshot) {
                 switch (snapshot.connectionState) {
                   case ConnectionState.active:
@@ -66,8 +71,8 @@ class _WelcomeState extends State<WelcomePage> {
                       onPressed: snapshot.data
                           ? null
                           : () {
-                              scan(context);
-                            },
+                        scan(context);
+                      },
                       child: snapshot.data ? CircularProgressIndicator() : Text("Scan"),
                     );
                   case ConnectionState.none:
@@ -104,7 +109,16 @@ class _WelcomeState extends State<WelcomePage> {
     // });
 
     BLEUart bleUart = BLEUart(device);
-    bleUart.isIntialized.then((value) => print("BLEUart Initialized"));
-    // Provider.of<FlutterBlue>(context, listen: false);
+    bleUart.isIntialized.then((value) {
+      print("BLEUart Initialized");
+
+      BLDC bldc = BLDC(bleUart);
+      bldc.sendIt(null).then((value) {
+        print("Write succes? $value");
+        bldc.readIt();
+      }, onError: (value) => print("Write failel? $value"));
+
+      //
+    });
   }
 }
