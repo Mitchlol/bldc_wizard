@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:bldc_wizard/bldc.dart';
 import 'package:bldc_wizard/ble_uart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
 
@@ -29,9 +26,7 @@ class _WelcomeState extends State<WelcomePage> {
           ),
           Expanded(
             child: StreamBuilder<List<ScanResult>>(
-                stream: Provider
-                    .of<FlutterBlue>(context)
-                    .scanResults,
+                stream: Provider.of<FlutterBlue>(context).scanResults,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
@@ -61,9 +56,7 @@ class _WelcomeState extends State<WelcomePage> {
                 }),
           ),
           StreamBuilder<Object>(
-              stream: Provider
-                  .of<FlutterBlue>(context)
-                  .isScanning,
+              stream: Provider.of<FlutterBlue>(context).isScanning,
               builder: (context, snapshot) {
                 switch (snapshot.connectionState) {
                   case ConnectionState.active:
@@ -71,8 +64,8 @@ class _WelcomeState extends State<WelcomePage> {
                       onPressed: snapshot.data
                           ? null
                           : () {
-                        scan(context);
-                      },
+                              scan(context);
+                            },
                       child: snapshot.data ? CircularProgressIndicator() : Text("Scan"),
                     );
                   case ConnectionState.none:
@@ -114,11 +107,10 @@ class _WelcomeState extends State<WelcomePage> {
 
       BLDC bldc = BLDC(bleUart);
       bldc.sendIt(null).then((value) {
-        print("Write succes? $value");
-        bldc.readIt();
-      }, onError: (value) => print("Write failel? $value"));
-
-      //
+        print("Write Success! $value");
+      }, onError: (value) {
+        print("Write Fail! $value");
+      });
     });
   }
 }
