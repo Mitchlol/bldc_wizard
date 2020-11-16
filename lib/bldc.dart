@@ -1,24 +1,28 @@
-import 'dart:typed_data';
-
 import 'package:bldc_wizard/ble_uart.dart';
+import 'package:bldc_wizard/models/fw_info.dart';
 import 'package:crclib/crclib.dart';
 import 'package:crclib/catalog.dart';
-import 'package:flutter/material.dart';
+
+enum CommCode {
+  COMM_FW_VERSION
+}
 
 class BLDC {
   BLEUart uart;
   List<int> _buffer;
 
+  Stream responseStream;
+
   BLDC(BLEUart uart) {
     this.uart = uart;
-    this.uart.getDataStream().listen((packet) => onRecievePacket(packet));
+    responseStream = this.uart.getDataStream().map(_onRecievePacket).where((it) => it != null);
   }
 
-  Future<Null> sendIt(List<int> message) {
+  Future<Null> _sendIt(List<int> message) {
     // Hardcode message for testing
     // message = [0x1d]; // Reboot
     // message = [0x1e]; // Alive
-    message = [0x00]; // Get Firmware Version
+    // message = [0x00]; // Get Firmware Version
     // message = [90]; // Calibrate IMU (Seems to work without yaw value)
     // message = [4];
 
@@ -37,20 +41,16 @@ class BLDC {
     request.add(crcLow);
     request.add(0x03);
 
-    // Working Reboot Request
-    // request[0] = 0x02;
-    // request[1] = 0x01;
-    // request[2] = 0x1d;
-    // request[3] = 0xc3;
-    // request[4] = 0x9c;
-    // request[5] = 0x03;
-
     print("Final data = ${request.map((e) => e.toRadixString(16))}");
 
-    return uart.write(request);
+    return uart.write(request).then((value) {
+      print("Write Success! $value");
+    }, onError: (value) {
+      print("Write Fail! $value");
+    });
   }
 
-  void onRecievePacket(List<int> packet) {
+  dynamic _onRecievePacket(List<int> packet) {
     // Starting fresh message
     if (_buffer == null) {
       if (packet.isEmpty || (packet.first != 2 && packet.first != 3 && packet.first != 4)) {
@@ -92,13 +92,24 @@ class BLDC {
         return;
       }
 
-      onRecieveMessage(message);
       _buffer = null;
+      return onRecieveMessage(message);
     }
   }
 
-  void onRecieveMessage(List<int> message) {
+  dynamic onRecieveMessage(List<int> message) {
     print("Message: $message");
+    switch(CommCode.values[message.removeAt(0)]){
+      case CommCode.COMM_FW_VERSION:
+        return FWInfo(message);
+        break;
+      default:
+        return null;
+    }
+  }
+
+  Future<bool> requestFirmwareInfo(){
+    _sendIt([CommCode.COMM_FW_VERSION.index]);
   }
 }
 

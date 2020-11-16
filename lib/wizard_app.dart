@@ -1,4 +1,4 @@
-import 'package:bldc_wizard/welcome.dart';
+import 'package:bldc_wizard/pages/welcome.dart';
 import 'package:flutter/material.dart';
 
 class WizardApp extends MaterialApp{

@@ -1,8 +1,11 @@
 import 'package:bldc_wizard/bldc.dart';
 import 'package:bldc_wizard/ble_uart.dart';
+import 'package:bldc_wizard/pages/start.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
+
+import '../model.dart';
 
 class WelcomePage extends StatefulWidget {
   WelcomePage({Key key}) : super(key: key);
@@ -85,32 +88,17 @@ class _WelcomeState extends State<WelcomePage> {
   }
 
   void connect(BuildContext context, BluetoothDevice device) {
-    // device.connect().then((value) {
-    //   print('Ayyyyyy we connected');
-    //   device.discoverServices().then((value) {
-    //     device.services.forEach((List<BluetoothService> serviceList) {
-    //       for(var service in serviceList){
-    //         print("Service: ${service.uuid}");
-    //         for(var characteristic in service.characteristics){
-    //           print("__Characteristic: ${characteristic.uuid}");
-    //         }
-    //
-    //       }
-    //
-    //     });
-    //   });
-    // });
-
     BLEUart bleUart = BLEUart(device);
     bleUart.isIntialized.then((value) {
       print("BLEUart Initialized");
-
-      BLDC bldc = BLDC(bleUart);
-      bldc.sendIt(null).then((value) {
-        print("Write Success! $value");
-      }, onError: (value) {
-        print("Write Fail! $value");
-      });
+      Provider.of<Model>(context, listen: false).bldc = BLDC(bleUart);
+      Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) {
+          return StartPage();
+        }),
+      );
     });
   }
 }
