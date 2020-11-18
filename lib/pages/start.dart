@@ -21,6 +21,9 @@ class _StartState extends State<StartPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Start"),
+        actions: [
+          getBluetoothStateIcon(context)
+        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -80,9 +83,35 @@ class _StartState extends State<StartPage> {
                   default:
                     return Container();
                 }
-              })
+              }),
+          RaisedButton(
+            onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
+            child: Text("Call get values"),
+          )
         ],
       ),
+    );
+  }
+
+  Widget getBluetoothStateIcon(BuildContext context){
+    return StreamBuilder<BluetoothDeviceState>(
+      stream:  Provider.of<Model>(context).bldc.state,
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data == BluetoothDeviceState.connected) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Icon(
+              Icons.bluetooth,
+              color: Colors.lightGreenAccent,
+            ),
+          );
+        }else{
+          return Icon(
+            Icons.bluetooth,
+            color: Colors.red,
+          );
+        }
+      },
     );
   }
 }

@@ -4,7 +4,11 @@ import 'package:crclib/crclib.dart';
 import 'package:crclib/catalog.dart';
 
 enum CommCode {
-  COMM_FW_VERSION
+  COMM_FW_VERSION,
+  COMM_JUMP_TO_BOOTLOADER,
+  COMM_ERASE_NEW_APP,
+  COMM_WRITE_NEW_APP_DATA,
+  COMM_GET_VALUES,
 }
 
 class BLDC {
@@ -12,10 +16,12 @@ class BLDC {
   List<int> _buffer;
 
   Stream responseStream;
+  Stream state;
 
   BLDC(BLEUart uart) {
     this.uart = uart;
     responseStream = this.uart.getDataStream().map(_onRecievePacket).where((it) => it != null);
+    state = this.uart.device.state;
   }
 
   Future<Null> _sendIt(List<int> message) {
@@ -109,8 +115,13 @@ class BLDC {
   }
 
   Future<bool> requestFirmwareInfo(){
-    _sendIt([CommCode.COMM_FW_VERSION.index]);
+    return _sendIt([CommCode.COMM_FW_VERSION.index]);
   }
+
+  Future<bool> requestGetValues(){
+    return _sendIt([CommCode.COMM_GET_VALUES.index]);
+  }
+
 }
 
 // Firmware response :-O
