@@ -15,75 +15,161 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomeState extends State<WelcomePage> {
+  bool hasScanned = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("BLDC Wizard"),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            "Welcome to the BLDC Wizard. Press scan blow to search for your ESC, this will require permissons.",
-          ),
-          Expanded(
-            child: StreamBuilder<List<ScanResult>>(
+      body: StreamBuilder<Object>(
+          stream: Provider.of<FlutterBlue>(context).isScanning,
+          builder: (context, snapshot) {
+            bool isScanning = false;
+            if (snapshot.data != null && snapshot.data == true) {
+              isScanning = true;
+            }
+            return StreamBuilder<List<ScanResult>>(
                 stream: Provider.of<FlutterBlue>(context).scanResults,
                 builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.active:
-                      var data = snapshot.data.where((result) => result.advertisementData.connectable && result.device.name.isNotEmpty).toList();
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: data.length,
-                        scrollDirection: Axis.vertical,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Card(
-                            child: ListTile(
-                              title: Text('Name: ${data[index].device.name}'),
-                              subtitle: Text('Address: ${data[index].device.id.id}'),
-                              onTap: () {
-                                connect(context, data[index].device);
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    case ConnectionState.none:
-                    case ConnectionState.waiting:
-                    case ConnectionState.done:
-                    default:
-                      return Container();
+                  List<ScanResult> scanResults = snapshot.data;
+                  if(snapshot.data != null){
+                    scanResults = scanResults.where((result) => result.advertisementData.connectable && result.device.name.isNotEmpty).toList();
                   }
-                }),
+                  return getBody(isScanning, scanResults);
+                });
+          }),
+    );
+  }
+
+  Widget getBody(bool isScanning, List<ScanResult> scanResults) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Expanded(
+          child: getAllListStates(isScanning, scanResults)),
+        getButton(isScanning),
+      ],
+    );
+  }
+
+  Widget getAllListStates(bool isScanning, List<ScanResult> scanResults){
+    if(!isScanning && (scanResults == null || hasScanned == false)){
+      return getWelcome();
+    }else if(!isScanning && scanResults.isEmpty){
+      return getEmpty();
+    }else{
+      return getList(scanResults);
+    }
+  }
+
+  Widget getWelcome(){
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Welcome to the BLDC Wizard!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              "Press scan blow to search for your ESC, this may launch a permission request.",
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget getEmpty(){
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "No bluetooth devices round!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              "No bluetooth devices found, please make sure bluetooth is enabled, and your ESC is powered on.",
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget getList(List<ScanResult> scanResults){
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: scanResults.length,
+      scrollDirection: Axis.vertical,
+      itemBuilder: (BuildContext context, int index) {
+        return Card(
+          child: ListTile(
+            title: Text('Name: ${scanResults[index].device.name}'),
+            subtitle: Text('Address: ${scanResults[index].device.id.id}'),
+            onTap: () {
+              connect(context, scanResults[index].device);
+            },
           ),
-          StreamBuilder<Object>(
-              stream: Provider.of<FlutterBlue>(context).isScanning,
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.active:
-                    return RaisedButton(
-                      onPressed: snapshot.data
-                          ? null
-                          : () {
-                              scan(context);
-                            },
-                      child: snapshot.data ? CircularProgressIndicator() : Text("Scan"),
-                    );
-                  case ConnectionState.none:
-                  case ConnectionState.waiting:
-                  case ConnectionState.done:
-                  default:
-                    return Container();
-                }
-              })
-        ],
+        );
+      },
+    );
+  }
+
+  Widget getButton(bool isRefreshing) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 60,
+        child: ElevatedButton(
+          onPressed: isRefreshing
+              ? null
+              : () {
+                  scan(context);
+                },
+          child: isRefreshing
+              ? CircularProgressIndicator()
+              : Text(
+                  "Scan",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+        ),
       ),
     );
   }
 
   void scan(BuildContext context) {
+    hasScanned = true;
     Provider.of<FlutterBlue>(context, listen: false).startScan(timeout: Duration(seconds: 5));
   }
 
