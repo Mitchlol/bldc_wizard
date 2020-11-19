@@ -20,7 +20,7 @@ class BLDC {
 
   BLDC(BLEUart uart) {
     this.uart = uart;
-    responseStream = this.uart.getDataStream().map(_onRecievePacket).where((it) => it != null);
+    responseStream = this.uart.getDataStream().map(_onRecievePacket).where((it) => it != null).asBroadcastStream();
     state = this.uart.device.state;
   }
 

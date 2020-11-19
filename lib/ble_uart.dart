@@ -24,7 +24,7 @@ class BLEUart {
     } catch (e) {
       print(e);
     }
-    await device.connect();
+    await device.connect(autoConnect: false);
     List<BluetoothService> services = await device.discoverServices();
 
     if (services == null) {
@@ -59,5 +59,13 @@ class BLEUart {
 
   Stream<List<int>> getDataStream() {
     return txCharacteristic.value;
+  }
+
+  Future disconnect() async{
+    try {
+      return await device.disconnect();
+    } catch (e) {
+      print(e);
+    }
   }
 }

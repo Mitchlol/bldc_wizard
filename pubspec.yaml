@@ -29,6 +29,7 @@ dependencies:
   cupertino_icons: ^1.0.0
 
   provider: ^4.3.2+2
+  async: ^2.4.2
 
   flutter_blue: ^0.7.3
   crclib: ^2.0.0

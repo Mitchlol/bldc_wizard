@@ -1,6 +1,7 @@
 import 'package:bldc_wizard/bldc.dart';
 import 'package:bldc_wizard/ble_uart.dart';
 import 'package:bldc_wizard/models/fw_info.dart';
+import 'package:bldc_wizard/widgets/call_stream_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_blue/flutter_blue.dart';
@@ -21,9 +22,7 @@ class _StartState extends State<StartPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Start"),
-        actions: [
-          getBluetoothStateIcon(context)
-        ],
+        actions: [getBluetoothStateIcon(context)],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -87,15 +86,55 @@ class _StartState extends State<StartPage> {
           RaisedButton(
             onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
             child: Text("Call get values"),
-          )
+          ),
+          RaisedButton(
+            onPressed: () => Provider.of<Model>(context, listen: false).bldc.uart.disconnect(),
+            child: Text("Disconnect"),
+          ),
+          RaisedButton(
+            onPressed: () {
+              BLEUart bleUart = BLEUart(Provider.of<Model>(context, listen: false).bldc.uart.device);
+              bleUart.isIntialized.then((value) {
+                Provider.of<Model>(context, listen: false).bldc = BLDC(bleUart);
+              });
+            },
+            child: Text("Connect"),
+          ),
+          CallStreamBuilder(
+            call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
+            stream: Provider.of<Model>(context).bldc.responseStream,
+            builder: (buildContext, call, isLoading, response) {
+              return Container(
+                color: Colors.deepOrangeAccent,
+                child: Column(
+                  children: [
+                    if (isLoading) CircularProgressIndicator(),
+                    if (response != null)  Column(
+                      children: [
+                        Text("FW Verison = ${response.getVersion()} "),
+                        Text("FW name = ${response.getName()}"),
+                        Text("FW UUID = ${response.getUuid()}"),
+                        Text("FW Paired = ${response.isPaired()}"),
+                      ],
+                    ),
+                    RaisedButton(
+                      onPressed: call,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget getBluetoothStateIcon(BuildContext context){
+  Widget getFirmwareStatusWidget() {}
+
+  Widget getBluetoothStateIcon(BuildContext context) {
     return StreamBuilder<BluetoothDeviceState>(
-      stream:  Provider.of<Model>(context).bldc.state,
+      stream: Provider.of<Model>(context).bldc.state,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data == BluetoothDeviceState.connected) {
           return Padding(
@@ -105,7 +144,7 @@ class _StartState extends State<StartPage> {
               color: Colors.lightGreenAccent,
             ),
           );
-        }else{
+        } else {
           return Icon(
             Icons.bluetooth,
             color: Colors.red,

@@ -15,11 +15,17 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomeState extends State<WelcomePage> {
+
+  final GlobalKey<State> _key = GlobalKey<State>();
+
   bool hasScanned = false;
+  bool isConnecting = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        key: _key,
         title: Text("BLDC Wizard"),
       ),
       body: StreamBuilder<Object>(
@@ -54,7 +60,9 @@ class _WelcomeState extends State<WelcomePage> {
   }
 
   Widget getAllListStates(bool isScanning, List<ScanResult> scanResults){
-    if(!isScanning && (scanResults == null || hasScanned == false)){
+    if(isConnecting){
+      return getConnecting();
+    }else if(!isScanning && (scanResults == null || hasScanned == false)){
       return getWelcome();
     }else if(!isScanning && scanResults.isEmpty){
       return getEmpty();
@@ -101,7 +109,7 @@ class _WelcomeState extends State<WelcomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "No bluetooth devices round!",
+              "No bluetooth devices found!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -112,7 +120,7 @@ class _WelcomeState extends State<WelcomePage> {
               height: 30,
             ),
             Text(
-              "No bluetooth devices found, please make sure bluetooth is enabled, and your ESC is powered on.",
+              "Please make sure bluetooth is enabled, and your ESC is powered on.",
               style: TextStyle(
                 fontSize: 18,
               ),
@@ -133,12 +141,39 @@ class _WelcomeState extends State<WelcomePage> {
           child: ListTile(
             title: Text('Name: ${scanResults[index].device.name}'),
             subtitle: Text('Address: ${scanResults[index].device.id.id}'),
+            trailing: Icon(Icons.bluetooth
+            ),
             onTap: () {
-              connect(context, scanResults[index].device);
+              connect(scanResults[index].device);
             },
           ),
         );
       },
+    );
+  }
+
+  Widget getConnecting(){
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Connecting...",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -149,10 +184,10 @@ class _WelcomeState extends State<WelcomePage> {
         width: double.infinity,
         height: 60,
         child: ElevatedButton(
-          onPressed: isRefreshing
+          onPressed: isRefreshing || isConnecting
               ? null
               : () {
-                  scan(context);
+                  scan();
                 },
           child: isRefreshing
               ? CircularProgressIndicator()
@@ -168,23 +203,48 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
-  void scan(BuildContext context) {
+  void scan() {
+    // // Clear stale state
+    // if(Provider.of<Model>(context, listen: false).bldc != null){
+    //   Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
+    // }
+    // Scan
     hasScanned = true;
-    Provider.of<FlutterBlue>(context, listen: false).startScan(timeout: Duration(seconds: 5));
+    Provider.of<FlutterBlue>(_key.currentContext, listen: false).startScan(timeout: Duration(seconds: 5));
   }
 
-  void connect(BuildContext context, BluetoothDevice device) {
+  void  connect(BluetoothDevice device){
+    // print("Connecting");
+    // // Clear stale state
+    // if(Provider.of<Model>(context, listen: false).bldc != null){
+    //   print("Connecting - already connected, disconnecting");
+    //   await Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
+    //   await Future.delayed(Duration(seconds: 1));
+    // }
+    // Connect
+    setState(() {
+      isConnecting = true;
+    });
     BLEUart bleUart = BLEUart(device);
     bleUart.isIntialized.then((value) {
       print("BLEUart Initialized");
-      Provider.of<Model>(context, listen: false).bldc = BLDC(bleUart);
-      Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo();
+      setState(() {
+        isConnecting = false;
+      });
+      Provider.of<Model>(_key.currentContext, listen: false).bldc = BLDC(bleUart);
+      Provider.of<Model>(_key.currentContext, listen: false).bldc.requestFirmwareInfo();
       Navigator.push(
-        context,
+        _key.currentContext,
         MaterialPageRoute(builder: (context) {
           return StartPage();
         }),
       );
+    }, onError: (error) {
+      setState(() {
+        isConnecting = false;
+      });
+      final snackBar = SnackBar(content: Text('Unable to connect, please make sure selected device has a UART interface.'));
+      Scaffold.of(_key.currentContext).showSnackBar(snackBar);
     });
   }
 }
