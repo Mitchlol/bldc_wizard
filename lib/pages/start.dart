@@ -25,111 +25,52 @@ class _StartState extends State<StartPage> {
         title: Text("Start"),
         actions: [ConnectionStateIndicator()],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            "Somthin somethin.",
-          ),
-          Expanded(
-            child: StreamBuilder<dynamic>(
-                stream: Provider.of<Model>(context).bldc.responseStream,
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.active:
-                      if (snapshot.data is FWInfo) {
-                        var data = snapshot.data as FWInfo;
-                        return Container(
-                          color: Colors.amber,
-                          child: Column(
-                            children: [
-                              Text("FW Verison = ${data.getVersion()} "),
-                              Text("FW name = ${data.getName()}"),
-                              Text("FW UUID = ${data.getUuid()}"),
-                              Text("FW Paired = ${data.isPaired()}"),
-                            ],
-                          ),
-                        );
-                      }
-                      return Container(
-                        height: 100,
-                        width: 200,
-                        color: Colors.green,
-                      );
-                    case ConnectionState.none:
-                    case ConnectionState.waiting:
-                    case ConnectionState.done:
-                    default:
-                      return Container();
-                  }
-                }),
-          ),
-          StreamBuilder<Object>(
-              stream: Provider.of<FlutterBlue>(context).isScanning,
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.active:
-                    return RaisedButton(
-                      onPressed: snapshot.data
-                          ? null
-                          : () {
-                              Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo();
-                            },
-                      child: snapshot.data ? CircularProgressIndicator() : Text("Refresh"),
-                    );
-                  case ConnectionState.none:
-                  case ConnectionState.waiting:
-                  case ConnectionState.done:
-                  default:
-                    return Container();
-                }
-              }),
-          RaisedButton(
-            onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
-            child: Text("Call get values"),
-          ),
-          RaisedButton(
-            onPressed: () => Provider.of<Model>(context, listen: false).bldc.uart.disconnect(),
-            child: Text("Disconnect"),
-          ),
-          RaisedButton(
-            onPressed: () {
-              BLEUart bleUart = BLEUart(Provider.of<Model>(context, listen: false).bldc.uart.device);
-              bleUart.isIntialized.then((value) {
-                Provider.of<Model>(context, listen: false).bldc = BLDC(bleUart);
-              });
-            },
-            child: Text("Connect"),
-          ),
-          CallStreamBuilder(
-            call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
-            stream: Provider.of<Model>(context).bldc.responseStream,
-            builder: (buildContext, call, isLoading, response) {
-              return Container(
-                color: Colors.deepOrangeAccent,
-                child: Column(
-                  children: [
-                    if (isLoading) CircularProgressIndicator(),
-                    if (response != null)  Column(
-                      children: [
-                        Text("FW Verison = ${response.getVersion()} "),
-                        Text("FW name = ${response.getName()}"),
-                        Text("FW UUID = ${response.getUuid()}"),
-                        Text("FW Paired = ${response.isPaired()}"),
-                      ],
-                    ),
-                    RaisedButton(
-                      onPressed: call,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            CallStreamBuilder(
+              call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
+              stream: Provider.of<Model>(context).bldc.responseStream,
+              autoLoad: true,
+              builder: (buildContext, call, isLoading, response) {
+                return Container(
+                  color: Colors.deepOrangeAccent,
+                  child: Column(
+                    children: [
+                      if (isLoading) CircularProgressIndicator(),
+                      if (response != null) getFirmwareStatusWidget(response),
+                      if (!isLoading && response == null) Text("Error loading FW Info, is this device a compatible ESC?"),
+                      RaisedButton(
+                        child: Text("Refresh"),
+                        onPressed: call,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            RaisedButton(
+              onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
+              child: Text("Call get values"),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget getFirmwareStatusWidget() {}
+  Widget getFirmwareStatusWidget(FWInfo info) {
+    return Column(
+      children: [
+        Text("FW Verison = ${info.getVersion()} "),
+        Text("FW name = ${info.getName()}"),
+        Text("FW UUID = ${info.getUuid()}"),
+        Text("FW Paired = ${info.isPaired()}"),
+      ],
+    );
+  }
 }

@@ -275,7 +275,6 @@ class _WelcomeState extends State<WelcomePage> {
         isConnecting = false;
       });
       Provider.of<Model>(_key.currentContext, listen: false).bldc = BLDC(bleUart);
-      Provider.of<Model>(_key.currentContext, listen: false).bldc.requestFirmwareInfo();
       Navigator.push(
         _key.currentContext,
         MaterialPageRoute(builder: (context) {

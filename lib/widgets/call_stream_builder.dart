@@ -10,11 +10,12 @@ class CallStreamBuilder<T> extends StatefulWidget {
   final Function call;
   final Stream<T> stream;
   final Duration timeout;
+  final bool autoLoad;
 
-  CallStreamBuilder({this.builder, this.call, this.stream, this.timeout = DEFAULT_DURATION});
+  CallStreamBuilder({this.builder, this.call, this.stream, this.timeout = DEFAULT_DURATION, this.autoLoad = false});
 
   @override
-  _CallStreamBuilder createState() => _CallStreamBuilder(builder, call, stream, timeout);
+  _CallStreamBuilder createState() => _CallStreamBuilder(builder, call, stream, timeout, autoLoad);
 }
 
 class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
@@ -26,8 +27,9 @@ class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
   bool isLoading;
   CancelableOperation cancelableOperation;
   StreamSubscription subscription;
+  bool autoLoad;
 
-  _CallStreamBuilder(this.buildFunction, this.callFunction, this.responseStream, this.timeout) {
+  _CallStreamBuilder(this.buildFunction, this.callFunction, this.responseStream, this.timeout, this.autoLoad) {
     this.isLoading = false;
     subscription = responseStream.listen((event) {
       setState(() {
@@ -42,6 +44,10 @@ class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
 
   @override
   Widget build(BuildContext context) {
+    if(autoLoad){
+      autoLoad = false;
+      callWrapper();
+    }
     return buildFunction(context, callWrapper, isLoading, responseValue);
   }
 
