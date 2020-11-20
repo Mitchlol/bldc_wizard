@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 
@@ -23,10 +25,11 @@ class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
   T responseValue;
   bool isLoading;
   CancelableOperation cancelableOperation;
+  StreamSubscription subscription;
 
   _CallStreamBuilder(this.buildFunction, this.callFunction, this.responseStream, this.timeout) {
     this.isLoading = false;
-    responseStream.listen((event) {
+    subscription = responseStream.listen((event) {
       setState(() {
         responseValue = event;
         isLoading = false;
@@ -40,6 +43,13 @@ class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
   @override
   Widget build(BuildContext context) {
     return buildFunction(context, callWrapper, isLoading, responseValue);
+  }
+
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
   }
 
   void callWrapper() {

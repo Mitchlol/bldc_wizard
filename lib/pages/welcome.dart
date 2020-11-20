@@ -15,11 +15,11 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomeState extends State<WelcomePage> {
-
   final GlobalKey<State> _key = GlobalKey<State>();
 
   bool hasScanned = false;
   bool isConnecting = false;
+  bool isDisconnecting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class _WelcomeState extends State<WelcomePage> {
                 stream: Provider.of<FlutterBlue>(context).scanResults,
                 builder: (context, snapshot) {
                   List<ScanResult> scanResults = snapshot.data;
-                  if(snapshot.data != null){
+                  if (snapshot.data != null) {
                     scanResults = scanResults.where((result) => result.advertisementData.connectable && result.device.name.isNotEmpty).toList();
                   }
                   return getBody(isScanning, scanResults);
@@ -52,26 +52,27 @@ class _WelcomeState extends State<WelcomePage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Expanded(
-          child: getAllListStates(isScanning, scanResults)),
+        Expanded(child: getAllListStates(isScanning, scanResults)),
         getButton(isScanning),
       ],
     );
   }
 
-  Widget getAllListStates(bool isScanning, List<ScanResult> scanResults){
-    if(isConnecting){
+  Widget getAllListStates(bool isScanning, List<ScanResult> scanResults) {
+    if (isConnecting) {
       return getConnecting();
-    }else if(!isScanning && (scanResults == null || hasScanned == false)){
+    }else if(isDisconnecting){
+      return getDisconnecting();
+    } else if (!isScanning && (scanResults == null || hasScanned == false)) {
       return getWelcome();
-    }else if(!isScanning && scanResults.isEmpty){
+    } else if (!isScanning && scanResults.isEmpty) {
       return getEmpty();
-    }else{
+    } else {
       return getList(scanResults);
     }
   }
 
-  Widget getWelcome(){
+  Widget getWelcome() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -101,7 +102,7 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
-  Widget getEmpty(){
+  Widget getEmpty() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -131,7 +132,7 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
-  Widget getList(List<ScanResult> scanResults){
+  Widget getList(List<ScanResult> scanResults) {
     return ListView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: scanResults.length,
@@ -141,8 +142,7 @@ class _WelcomeState extends State<WelcomePage> {
           child: ListTile(
             title: Text('Name: ${scanResults[index].device.name}'),
             subtitle: Text('Address: ${scanResults[index].device.id.id}'),
-            trailing: Icon(Icons.bluetooth
-            ),
+            trailing: Icon(Icons.bluetooth),
             onTap: () {
               connect(scanResults[index].device);
             },
@@ -152,7 +152,7 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
-  Widget getConnecting(){
+  Widget getConnecting() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -177,6 +177,31 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
+  Widget getDisconnecting() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Disconnecting...",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget getButton(bool isRefreshing) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -184,7 +209,7 @@ class _WelcomeState extends State<WelcomePage> {
         width: double.infinity,
         height: 60,
         child: ElevatedButton(
-          onPressed: isRefreshing || isConnecting
+          onPressed: isRefreshing || isConnecting || isDisconnecting
               ? null
               : () {
                   scan();
@@ -203,24 +228,42 @@ class _WelcomeState extends State<WelcomePage> {
     );
   }
 
-  void scan() {
-    // // Clear stale state
-    // if(Provider.of<Model>(context, listen: false).bldc != null){
-    //   Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
-    // }
+  void scan() async {
+    // Clear stale state
+    if (Provider.of<Model>(context, listen: false).bldc != null) {
+      setState(() {
+        isDisconnecting = true;
+      });
+      if(await Provider.of<Model>(context, listen: false).bldc.uart.device.state.first == BluetoothDeviceState.connected) {
+        await Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
+        await Future.delayed(Duration(milliseconds: 2000));
+      }
+      Provider.of<Model>(context, listen: false).bldc = null;
+      setState(() {
+        isDisconnecting = false;
+      });
+    }
     // Scan
     hasScanned = true;
     Provider.of<FlutterBlue>(_key.currentContext, listen: false).startScan(timeout: Duration(seconds: 5));
   }
 
-  void  connect(BluetoothDevice device){
-    // print("Connecting");
-    // // Clear stale state
-    // if(Provider.of<Model>(context, listen: false).bldc != null){
-    //   print("Connecting - already connected, disconnecting");
-    //   await Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
-    //   await Future.delayed(Duration(seconds: 1));
-    // }
+  void connect(BluetoothDevice device) async {
+    print("Connecting");
+    // Clear stale state
+    if (Provider.of<Model>(context, listen: false).bldc != null) {
+      setState(() {
+        isDisconnecting = true;
+      });
+      if(await device.state.first == BluetoothDeviceState.connected) {
+        await Provider.of<Model>(context, listen: false).bldc.uart.disconnect();
+        await Future.delayed(Duration(milliseconds: 2000));
+      }
+      Provider.of<Model>(context, listen: false).bldc = null;
+      setState(() {
+        isDisconnecting = false;
+      });
+    }
     // Connect
     setState(() {
       isConnecting = true;

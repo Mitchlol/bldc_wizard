@@ -2,6 +2,7 @@ import 'package:bldc_wizard/bldc.dart';
 import 'package:bldc_wizard/ble_uart.dart';
 import 'package:bldc_wizard/models/fw_info.dart';
 import 'package:bldc_wizard/widgets/call_stream_builder.dart';
+import 'package:bldc_wizard/widgets/connection_state_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_blue/flutter_blue.dart';
@@ -22,7 +23,7 @@ class _StartState extends State<StartPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Start"),
-        actions: [getBluetoothStateIcon(context)],
+        actions: [ConnectionStateIndicator()],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -131,26 +132,4 @@ class _StartState extends State<StartPage> {
   }
 
   Widget getFirmwareStatusWidget() {}
-
-  Widget getBluetoothStateIcon(BuildContext context) {
-    return StreamBuilder<BluetoothDeviceState>(
-      stream: Provider.of<Model>(context).bldc.state,
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data == BluetoothDeviceState.connected) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Icon(
-              Icons.bluetooth,
-              color: Colors.lightGreenAccent,
-            ),
-          );
-        } else {
-          return Icon(
-            Icons.bluetooth,
-            color: Colors.red,
-          );
-        }
-      },
-    );
-  }
 }

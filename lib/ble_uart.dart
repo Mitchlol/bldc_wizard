@@ -19,12 +19,11 @@ class BLEUart {
   }
 
   Future<bool> init() async {
-    try {
+    if(await device.state.first == BluetoothDeviceState.connected) {
       await device.disconnect();
-    } catch (e) {
-      print(e);
+      await Future.delayed(Duration(seconds: 2));
     }
-    await device.connect(autoConnect: false);
+    await device.connect(autoConnect: true);
     List<BluetoothService> services = await device.discoverServices();
 
     if (services == null) {
