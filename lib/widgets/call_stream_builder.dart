@@ -3,16 +3,19 @@ import 'dart:async';
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 
+typedef CallStreamBuilderWidgetBuilder<T> = Widget Function(BuildContext context, Function call, bool isLoading, T value);
+
 class CallStreamBuilder<T> extends StatefulWidget {
   static const Duration DEFAULT_DURATION = Duration(seconds: 4);
 
-  final Widget Function(BuildContext, Function, bool, T) builder;
+  final CallStreamBuilderWidgetBuilder<T> builder;
   final Function call;
   final Stream<T> stream;
   final Duration timeout;
   final bool autoLoad;
 
-  CallStreamBuilder({this.builder, this.call, this.stream, this.timeout = DEFAULT_DURATION, this.autoLoad = false});
+  CallStreamBuilder({@required this.builder, @required this.call, @required this.stream, this.timeout = DEFAULT_DURATION, this.autoLoad = false, Key key})
+      : assert(builder != null), assert(call != null), assert(stream != null), super(key: key);
 
   @override
   _CallStreamBuilder createState() => _CallStreamBuilder(builder, call, stream, timeout, autoLoad);
@@ -44,13 +47,12 @@ class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
 
   @override
   Widget build(BuildContext context) {
-    if(autoLoad){
+    if (autoLoad) {
       autoLoad = false;
       callWrapper();
     }
     return buildFunction(context, callWrapper, isLoading, responseValue);
   }
-
 
   @override
   void dispose() {

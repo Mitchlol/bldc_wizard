@@ -20,10 +20,25 @@ class StartPage extends StatefulWidget {
 class _StartState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
+    return CallStreamBuilder(
+        call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
+        stream: Provider.of<Model>(context).bldc.responseStream,
+        autoLoad: true,
+        builder: rootBuilder);
+  }
+
+  Widget rootBuilder(buildContext, call, isLoading, response) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Start"),
-        actions: [ConnectionStateIndicator()],
+      appBar: AppBar(title: Text("Firmware Status"), actions: [ConnectionStateIndicator()]),
+      floatingActionButton: FloatingActionButton(
+        child: !isLoading
+            ? Icon(
+          Icons.refresh,
+        )
+            : CircularProgressIndicator(
+          valueColor: new AlwaysStoppedAnimation<Color>(Colors.grey),
+        ),
+        onPressed: !isLoading ? call : null,
       ),
       body: SizedBox(
         width: double.infinity,
@@ -31,28 +46,20 @@ class _StartState extends State<StartPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            CallStreamBuilder(
-              call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
-              stream: Provider.of<Model>(context).bldc.responseStream,
-              autoLoad: true,
-              builder: (buildContext, call, isLoading, response) {
-                return Container(
-                  color: Colors.deepOrangeAccent,
-                  child: Column(
-                    children: [
-                      if (isLoading) CircularProgressIndicator(),
-                      if (response != null) getFirmwareStatusWidget(response),
-                      if (!isLoading && response == null) Text("Error loading FW Info, is this device a compatible ESC?"),
-                      RaisedButton(
-                        child: Text("Refresh"),
-                        onPressed: call,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+          children: [
+            Container(
+                color: Colors.red,
+                child: Column(
+                  children: [
+                    if (isLoading) CircularProgressIndicator(),
+                    if (response != null) getFirmwareStatusWidget(response),
+                    if (!isLoading && response == null) Text("Error loading FW Info, is this device a compatible ESC?"),
+                    RaisedButton(
+                      child: Text("Refresh"),
+                      onPressed: call,
+                    ),
+                  ],
+                )),
             RaisedButton(
               onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
               child: Text("Call get values"),
