@@ -114,6 +114,10 @@ class BLDC {
     }
   }
 
+  Stream<T> getStream<T>(){
+    return responseStream.takeWhile((element) => element is T).cast<T>();
+  }
+
   Future<bool> requestFirmwareInfo(){
     return _sendIt([CommCode.COMM_FW_VERSION.index]);
   }

@@ -20,46 +20,76 @@ class StartPage extends StatefulWidget {
 class _StartState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
-    return CallStreamBuilder(
+    return CallStreamBuilder<FWInfo>(
         call: Provider.of<Model>(context, listen: false).bldc.requestFirmwareInfo,
-        stream: Provider.of<Model>(context).bldc.responseStream,
+        stream: Provider.of<Model>(context).bldc.getStream<FWInfo>(),
         autoLoad: true,
-        builder: rootBuilder);
+        builder: (buildContext, call, isLoading, FWInfo fwInfo) {
+          return Scaffold(
+              appBar: AppBar(title: Text("BLDC Wizard"), actions: [ConnectionStateIndicator()]),
+              floatingActionButton: FloatingActionButton(
+                child: !isLoading
+                    ? Icon(
+                        Icons.refresh,
+                      )
+                    : CircularProgressIndicator(
+                        valueColor: new AlwaysStoppedAnimation<Color>(Colors.grey),
+                      ),
+                onPressed: !isLoading ? call : null,
+              ),
+              body: getBody(buildContext, call, isLoading, fwInfo));
+        });
   }
 
-  Widget rootBuilder(buildContext, call, isLoading, response) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Firmware Status"), actions: [ConnectionStateIndicator()]),
-      floatingActionButton: FloatingActionButton(
-        child: !isLoading
-            ? Icon(
-          Icons.refresh,
-        )
-            : CircularProgressIndicator(
-          valueColor: new AlwaysStoppedAnimation<Color>(Colors.grey),
-        ),
-        onPressed: !isLoading ? call : null,
-      ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
+  Widget getBody(buildContext, call, isLoading, FWInfo fwInfo) {
+    if (isLoading) {
+      return Container();
+    }
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
           children: [
-            Container(
-                color: Colors.red,
-                child: Column(
-                  children: [
-                    if (isLoading) CircularProgressIndicator(),
-                    if (response != null) getFirmwareStatusWidget(response),
-                    if (!isLoading && response == null) Text("Error loading FW Info, is this device a compatible ESC?"),
-                    RaisedButton(
-                      child: Text("Refresh"),
-                      onPressed: call,
+            Card(
+              elevation: 5,
+              child: Column(
+                children: [
+                  Container(
+                    color: Colors.blue,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              fwInfo.getName(),
+                              style: TextStyle(
+                                fontSize: 25,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              "ID: ${fwInfo.getUuid()}",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                )),
+                  ),
+                  getFirmwareStatusWidget(fwInfo),
+                ],
+              ),
+            ),
             RaisedButton(
               onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
               child: Text("Call get values"),
@@ -71,13 +101,28 @@ class _StartState extends State<StartPage> {
   }
 
   Widget getFirmwareStatusWidget(FWInfo info) {
-    return Column(
-      children: [
-        Text("FW Verison = ${info.getVersion()} "),
-        Text("FW name = ${info.getName()}"),
-        Text("FW UUID = ${info.getUuid()}"),
-        Text("FW Paired = ${info.isPaired()}"),
-      ],
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Firmware: ${info.getVersion()}",
+              style: TextStyle(
+                fontSize: 20,
+              ),
+            ),
+            Text(
+              "ID: ${info.getUuid()}",
+              style: TextStyle(
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

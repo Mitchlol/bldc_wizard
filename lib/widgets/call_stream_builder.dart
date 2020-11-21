@@ -18,7 +18,7 @@ class CallStreamBuilder<T> extends StatefulWidget {
       : assert(builder != null), assert(call != null), assert(stream != null), super(key: key);
 
   @override
-  _CallStreamBuilder createState() => _CallStreamBuilder(builder, call, stream, timeout, autoLoad);
+  _CallStreamBuilder createState() => _CallStreamBuilder<T>(builder, call, stream, timeout, autoLoad);
 }
 
 class _CallStreamBuilder<T> extends State<CallStreamBuilder<T>> {
