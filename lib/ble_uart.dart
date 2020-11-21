@@ -19,17 +19,19 @@ class BLEUart {
   }
 
   Future<bool> init() async {
-    if(await device.state.first == BluetoothDeviceState.connected) {
+    if (await device.state.first == BluetoothDeviceState.connected) {
       await device.disconnect();
       await Future.delayed(Duration(seconds: 2));
     }
-    await device.connect(autoConnect: true);
-    List<BluetoothService> services = await device.discoverServices();
 
+    await device
+        .connect(timeout: Duration(seconds: 4), autoConnect: true)
+        .timeout(Duration(milliseconds: 4250), onTimeout: () => throw Exception("Connection Timeout"));
+
+    List<BluetoothService> services = await device.discoverServices();
     if (services == null) {
       throw Exception("Cant discover bluetooth services");
     }
-
     service = services.firstWhere((BluetoothService service) => service.uuid.toString() == SERVICE_UUID);
     if (service == null) {
       throw Exception("Device does not have UART service");
@@ -60,7 +62,7 @@ class BLEUart {
     return txCharacteristic.value;
   }
 
-  Future disconnect() async{
+  Future disconnect() async {
     try {
       return await device.disconnect();
     } catch (e) {
