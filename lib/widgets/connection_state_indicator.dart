@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
 
-import '../bldc.dart';
-import '../ble_uart.dart';
+import '../esc/bldc.dart';
+import '../esc/ble_uart.dart';
 import '../model.dart';
 
 class ConnectionStateIndicator extends StatefulWidget {

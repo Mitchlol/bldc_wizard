@@ -1,5 +1,5 @@
-import 'package:bldc_wizard/bldc.dart';
-import 'package:bldc_wizard/ble_uart.dart';
+import 'package:bldc_wizard/esc/bldc.dart';
+import 'package:bldc_wizard/esc/ble_uart.dart';
 import 'package:bldc_wizard/pages/start.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';

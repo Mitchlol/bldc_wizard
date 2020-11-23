@@ -25,8 +25,8 @@ class BLEUart {
     }
 
     await device
-        .connect(timeout: Duration(seconds: 4), autoConnect: true)
-        .timeout(Duration(milliseconds: 4250), onTimeout: () => throw Exception("Connection Timeout"));
+        .connect(timeout: Duration(seconds: 5), autoConnect: true)
+        .timeout(Duration(milliseconds: 5250), onTimeout: () => throw Exception("Connection Timeout"));
 
     List<BluetoothService> services = await device.discoverServices();
     if (services == null) {

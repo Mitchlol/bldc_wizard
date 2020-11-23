@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:bldc_wizard/esc/parse_util.dart';
+
 class FWInfo{
   int major;
   int minor;
@@ -11,28 +13,23 @@ class FWInfo{
   FWInfo(List<int> data){
 
     if(data.length > 2) {
-      major = data.removeAt(0);
-      minor = data.removeAt(0);
+      major = ParseUtil.takeInt8(data);
+      minor = ParseUtil.takeInt8(data);
 
-      int nameEndIndex = data.indexWhere((it) => it == 0);
-      name = utf8.decode(data.sublist(0, nameEndIndex));
-      data.removeRange(0, nameEndIndex);
-      data.removeAt(0);
+      name = ParseUtil.takeString(data);
     }
 
     if(data.length >= 12){
-      uuid = data.sublist(0, 12);
-      data.removeRange(0, 12);
+      uuid = ParseUtil.takeInt8List(data);
     }
 
     if(data.length >= 1){
-      paired = data.removeAt(0);
+      paired = ParseUtil.takeInt8(data);
     }
 
     if(data.length >= 1){
-      test = data.removeAt(0);
+      test = ParseUtil.takeInt8(data);
     }
-
   }
 
   String getVersion(){
@@ -53,6 +50,10 @@ class FWInfo{
 
   bool isPaired(){
     return paired > 0;
+  }
+
+  bool isSupported(){
+    return true;
   }
 
 }

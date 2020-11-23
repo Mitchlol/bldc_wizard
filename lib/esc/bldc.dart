@@ -1,15 +1,10 @@
-import 'package:bldc_wizard/ble_uart.dart';
-import 'package:bldc_wizard/models/fw_info.dart';
+import 'package:bldc_wizard/esc/ble_uart.dart';
+import 'package:bldc_wizard/esc/models/fw_info.dart';
+import 'package:bldc_wizard/esc/models/motor_config.dart';
 import 'package:crclib/crclib.dart';
 import 'package:crclib/catalog.dart';
 
-enum CommCode {
-  COMM_FW_VERSION,
-  COMM_JUMP_TO_BOOTLOADER,
-  COMM_ERASE_NEW_APP,
-  COMM_WRITE_NEW_APP_DATA,
-  COMM_GET_VALUES,
-}
+import './models/comm_code.dart';
 
 class BLDC {
   BLEUart uart;
@@ -25,12 +20,6 @@ class BLDC {
   }
 
   Future<Null> _sendIt(List<int> message) {
-    // Hardcode message for testing
-    // message = [0x1d]; // Reboot
-    // message = [0x1e]; // Alive
-    // message = [0x00]; // Get Firmware Version
-    // message = [90]; // Calibrate IMU (Seems to work without yaw value)
-    // message = [4];
 
     // Calculate CRC
     CrcValue crc = Crc16Xmodem().convert(message);
@@ -50,7 +39,7 @@ class BLDC {
     print("Final data = ${request.map((e) => e.toRadixString(16))}");
 
     return uart.write(request).then((value) {
-      print("Write Success! $value");
+      print("Write Success!");
     }, onError: (value) {
       print("Write Fail! $value");
     });
@@ -70,14 +59,14 @@ class BLDC {
     // Add packet to message
     _buffer.addAll(packet);
 
-    // Get mssage length
+    // Get message length
     int messageLength;
     if (_buffer[0] == 2) {
       messageLength = _buffer[1];
     } else if (_buffer[0] == 3) {
-      messageLength = _buffer[1] << 8 + _buffer[2];
+      messageLength = (_buffer[1] << 8) + _buffer[2];
     } else {
-      messageLength = _buffer[1] << 16 + _buffer[2] << 8 + _buffer[3];
+      messageLength = (_buffer[1] << 16) + (_buffer[2] << 8) + _buffer[3];
     }
 
     // Check for message done
@@ -93,7 +82,8 @@ class BLDC {
       List<int> message = _buffer.sublist(_buffer[0], _buffer[0] + messageLength);
       CrcValue crc2 = Crc16Xmodem().convert(message);
       if (crc != int.parse(crc2.toRadixString(10))) {
-        print("onRecievePacket: CRC check failed, discarding.\nRecieved: ${crc.toRadixString(16)}\nCalculated: ${int.parse(crc2.toString()).toRadixString(16)}");
+        print(
+            "onRecievePacket: CRC check failed, discarding.\nRecieved: ${crc.toRadixString(16)}\nCalculated: ${int.parse(crc2.toString()).toRadixString(16)}");
         _buffer = null;
         return;
       }
@@ -105,38 +95,34 @@ class BLDC {
 
   dynamic onRecieveMessage(List<int> message) {
     print("Message: $message");
-    switch(CommCode.values[message.removeAt(0)]){
+    switch (CommCode.values[message.removeAt(0)]) {
       case CommCode.COMM_FW_VERSION:
         return FWInfo(message);
+        break;
+      case CommCode.COMM_GET_MCCONF:
+        return MotorConfig(message);
         break;
       default:
         return null;
     }
   }
 
-  Stream<T> getStream<T>(){
+  Stream<T> getStream<T>() {
     return responseStream.takeWhile((element) => element is T).cast<T>();
   }
 
-  Future<bool> requestFirmwareInfo(){
+  Future<bool> requestFirmwareInfo() {
     return _sendIt([CommCode.COMM_FW_VERSION.index]);
   }
 
-  Future<bool> requestGetValues(){
+  Future<bool> requestGetValues() {
     return _sendIt([CommCode.COMM_GET_VALUES.index]);
   }
 
+  Future<bool> requestMotorConfig() {
+    return _sendIt([CommCode.COMM_GET_MCCONF.index]);
+  }
 }
-
-// Firmware response :-O
-// [0] = Packet size type = 2
-// [1] = Packet size = 32
-// [2] = message = COMM_FW_VERSION
-// [3] = fw_major = 5
-// [4] = fw_minor = 2
-// [5 - ???] = hw =
-// [2, 32, 0, 5, 2, 83, 84, 79, 82, 77, 67, 79, 82, 69, 95, 49, 48, 48, 83, 0]
-// [67, 0, 26, 0, 25, 80, 77, 89, 67, 57, 57, 32, 0, 8, 151, 123, 3]
 
 // int PackSendPayload
 // (

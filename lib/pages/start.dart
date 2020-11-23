@@ -1,6 +1,6 @@
-import 'package:bldc_wizard/bldc.dart';
-import 'package:bldc_wizard/ble_uart.dart';
-import 'package:bldc_wizard/models/fw_info.dart';
+import 'package:bldc_wizard/esc/bldc.dart';
+import 'package:bldc_wizard/esc/ble_uart.dart';
+import 'package:bldc_wizard/esc/models/fw_info.dart';
 import 'package:bldc_wizard/widgets/call_stream_builder.dart';
 import 'package:bldc_wizard/widgets/connection_state_indicator.dart';
 import 'package:flutter/material.dart';
@@ -41,10 +41,7 @@ class _StartState extends State<StartPage> {
         });
   }
 
-  Widget getBody(buildContext, call, isLoading, FWInfo fwInfo) {
-    if (isLoading) {
-      return Container();
-    }
+  Widget getBody(BuildContext buildContext, Function call, bool isLoading, FWInfo fwInfo) {
     return SizedBox(
       width: double.infinity,
       height: double.infinity,
@@ -52,44 +49,8 @@ class _StartState extends State<StartPage> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Card(
-              elevation: 5,
-              child: Column(
-                children: [
-                  Container(
-                    color: Colors.blue,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              fwInfo.getName(),
-                              style: TextStyle(
-                                fontSize: 25,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              "ID: ${fwInfo.getUuid()}",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  getFirmwareStatusWidget(fwInfo),
-                ],
-              ),
-            ),
+            getCard(buildContext, call, isLoading, fwInfo),
+            getButtons(buildContext, call, isLoading, fwInfo),
             RaisedButton(
               onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
               child: Text("Call get values"),
@@ -100,29 +61,81 @@ class _StartState extends State<StartPage> {
     );
   }
 
-  Widget getFirmwareStatusWidget(FWInfo info) {
-    return SizedBox(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Firmware: ${info.getVersion()}",
-              style: TextStyle(
-                fontSize: 20,
+  Widget getCard(BuildContext buildContext, Function call, bool isLoading, FWInfo fwInfo) {
+    return Card(
+      elevation: 5,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.blue,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        isLoading? "Loading..." : fwInfo == null? "Unknown Firmware" : fwInfo.getName(),
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        isLoading? "" : fwInfo == null? "Is device a compatible ESC" : "ID: ${fwInfo.getUuid()}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            Text(
-              "ID: ${info.getUuid()}",
-              style: TextStyle(
-                fontSize: 20,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    isLoading? "Loading..." : fwInfo == null? "Unable to parse FW Info, is device running Benjamin Vedder's BLDC Firmware?" : "Firmware: ${fwInfo.getVersion()}",
+                    maxLines: 3,
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  Widget getButtons(BuildContext buildContext, Function call, bool isLoading, FWInfo fwInfo) {
+    return Expanded(
+      child: ListView(
+        children: [
+          Card(
+            child: ListTile(
+              title: Text('Set Power Output'),
+              subtitle: Text('Adjust motor current output values. This will determine the maximum torque for your vehicle.'),
+              trailing: Icon(Icons.bolt),
+              onTap: isLoading? null : fwInfo == null ? null : !fwInfo.isSupported()? null : () {
+                Provider.of<Model>(context, listen: false).bldc.requestMotorConfig();
+              },
+            ),
+          )
+        ],
+      ),
+    );
+
   }
 }
