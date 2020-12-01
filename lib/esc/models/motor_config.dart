@@ -407,5 +407,171 @@ class MotorConfig {
     bms.socLimitEnd = ParseUtil.takeDouble2Byte(data, 1000);
 
     print("Parsed Motor Config, MaxCurrent = $lCurrentMax, MinCurrent = $lCurrentMin, hall table = $hallTable");
+    serialize();
+  }
+
+  List<int> serialize(){
+
+    List<int> serialized = List<int>();
+
+    ParseUtil.putInt32(serialized, signature);
+    ParseUtil.putInt8(serialized, pwmMode.index);
+    ParseUtil.putInt8(serialized, commMode.index);
+    ParseUtil.putInt8(serialized, motorType.index);
+    ParseUtil.putInt8(serialized, sensorMode.index);
+    ParseUtil.putDouble(serialized, lCurrentMax);
+    ParseUtil.putDouble(serialized, lCurrentMin);
+
+    // lInCurrentMax = ParseUtil.takeDouble(data);
+    // lInCurrentMin = ParseUtil.takeDouble(data);
+    // lAbsCurrentMax = ParseUtil.takeDouble(data);
+    // lMinErpm = ParseUtil.takeDouble(data);
+    // lMaxErpm = ParseUtil.takeDouble(data);
+    // lErpmStart = ParseUtil.takeDouble(data);
+    // lMaxErpmFbrake = ParseUtil.takeDouble(data);
+    // lMaxErpmFbrakeCc = ParseUtil.takeDouble(data);
+    // lMinVin = ParseUtil.takeDouble(data);
+    // lMaxVin = ParseUtil.takeDouble(data);
+    // lBatteryCutStart = ParseUtil.takeDouble(data);
+    // lBatteryCutEnd = ParseUtil.takeDouble(data);
+    // lSlowAbsCurrent = ParseUtil.takeBoolean(data);
+    // lTempFetStart = ParseUtil.takeDouble(data);
+    // lTempFetEnd = ParseUtil.takeDouble(data);
+    // lTempMotorStart = ParseUtil.takeDouble(data);
+    // lTempMotorEnd = ParseUtil.takeDouble(data);
+    // lTempAccelDec = ParseUtil.takeDouble(data);
+    // lMinDuty = ParseUtil.takeDouble(data);
+    // lMaxDuty = ParseUtil.takeDouble(data);
+    // lWattMax = ParseUtil.takeDouble(data);
+    // lWattMin = ParseUtil.takeDouble(data);
+    // lCurrentMaxScale = ParseUtil.takeDouble(data);
+    // lCurrentMinScale = ParseUtil.takeDouble(data);
+    // lDutyStart = ParseUtil.takeDouble(data);
+    // slMinErpm = ParseUtil.takeDouble(data);
+    // slMinErpmCycleIntLimit = ParseUtil.takeDouble(data);
+    // slMaxFullbreakCurrentDirChange = ParseUtil.takeDouble(data);
+    // slCycleIntLimit = ParseUtil.takeDouble(data);
+    // slPhaseAdvanceAtBr = ParseUtil.takeDouble(data);
+    // slCycleIntRpmBr = ParseUtil.takeDouble(data);
+    // slBemfCouplingK = ParseUtil.takeDouble(data);
+    // hallTable = [
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    // ]; // Just pretend its uint, seems like qt app seems to do it this way
+    // hallSlErpm = ParseUtil.takeDouble(data);
+    // focCurrentKp = ParseUtil.takeDouble(data);
+    // focCurrentKi = ParseUtil.takeDouble(data);
+    // focFSw = ParseUtil.takeDouble(data);
+    // focDtUs = ParseUtil.takeDouble(data);
+    // focEncoderInverted = ParseUtil.takeBoolean(data);
+    // focEncoderOffset = ParseUtil.takeDouble(data);
+    // focEncoderRatio = ParseUtil.takeDouble(data);
+    // focEncoderSinGain = ParseUtil.takeDouble(data);
+    // focEncoderCosGain = ParseUtil.takeDouble(data);
+    // focEncoderSinOffset = ParseUtil.takeDouble(data);
+    // focEncoderCosOffset = ParseUtil.takeDouble(data);
+    // focEncoderSincosFilterConstant = ParseUtil.takeDouble(data);
+    // focSensorMode = McFocSensorMode.values[ParseUtil.takeInt8(data)];
+    // focPllKp = ParseUtil.takeDouble(data);
+    // focPllKi = ParseUtil.takeDouble(data);
+    // focMotorL = ParseUtil.takeDouble(data);
+    // focMotorLdLqDiff = ParseUtil.takeDouble(data);
+    // focMotorR = ParseUtil.takeDouble(data);
+    // focMotorFluxLinkage = ParseUtil.takeDouble(data);
+    // focObserverGain = ParseUtil.takeDouble(data);
+    // focObserverGainSlow = ParseUtil.takeDouble(data);
+    // focDutyDowmrampKp = ParseUtil.takeDouble(data);
+    // focDutyDowmrampKi = ParseUtil.takeDouble(data);
+    // focOpenloopRpm = ParseUtil.takeDouble(data);
+    // focOpenloopRpmLow = ParseUtil.takeDouble2Byte(data, 1000);
+    // focSlOpenloopHyst = ParseUtil.takeDouble2Byte(data, 100);
+    // focSlOpenloopTimeLock = ParseUtil.takeDouble2Byte(data, 100);
+    // focSlOpenloopTimeRamp = ParseUtil.takeDouble2Byte(data, 100);
+    // focSlOpenloopTime = ParseUtil.takeDouble2Byte(data, 100);
+    // focHallTable = [
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    //   ParseUtil.takeInt8(data),
+    // ];
+    // focHallInterpErpm = ParseUtil.takeDouble(data);
+    // focSlErpm = ParseUtil.takeDouble(data);
+    // focSampleV0V7 = ParseUtil.takeBoolean(data);
+    // focSampleHighCurrent = ParseUtil.takeBoolean(data);
+    // focSatComp = ParseUtil.takeDouble2Byte(data, 1000);
+    // focTempComp = ParseUtil.takeBoolean(data);
+    // focTempCompBaseTemp = ParseUtil.takeDouble2Byte(data, 100);
+    // focCurrentFilterConst = ParseUtil.takeDouble(data);
+    // focCcDecoupling = McFocCcDecouplingMode.values[ParseUtil.takeInt8(data)];
+    // focObserverType = McFocObserverType.values[ParseUtil.takeInt8(data)];
+    // focHfiVoltageStart = ParseUtil.takeDouble(data);
+    // focHfiVoltageRun = ParseUtil.takeDouble(data);
+    // focHfiVoltageMax = ParseUtil.takeDouble(data);
+    // focSlErpmHfi = ParseUtil.takeDouble(data);
+    // focHfiStartSamples = ParseUtil.takeInt16(data);
+    // focHfiObsOvrSec = ParseUtil.takeDouble(data);
+    // focHfiSamples = McFocHfiSamples.values[ParseUtil.takeInt8(data)];
+    // gpdBufferNotifyLeft = ParseUtil.takeInt16s(data);
+    // gpdBufferInterpol = ParseUtil.takeInt16s(data);
+    // gpdCurrentFilterConst = ParseUtil.takeDouble(data);
+    // gpdCurrentKp = ParseUtil.takeDouble(data);
+    // gpdCurrentKi = ParseUtil.takeDouble(data);
+    // sPidKd = ParseUtil.takeDouble(data);
+    // sPidKi = ParseUtil.takeDouble(data);
+    // sPidKd = ParseUtil.takeDouble(data);
+    // sPidKdFilter = ParseUtil.takeDouble(data);
+    // sPidMinErpm = ParseUtil.takeDouble(data);
+    // sPidAllowBraking = ParseUtil.takeBoolean(data);
+    // sPidRampErpmsS = ParseUtil.takeDouble(data);
+    // pPidKp = ParseUtil.takeDouble(data);
+    // pPidKi = ParseUtil.takeDouble(data);
+    // pPidKd = ParseUtil.takeDouble(data);
+    // pPidKdFilter = ParseUtil.takeDouble(data);
+    // pPidAngDiv = ParseUtil.takeDouble(data);
+    // ccStartupBoostDuty = ParseUtil.takeDouble(data);
+    // ccMinCurrent = ParseUtil.takeDouble(data);
+    // ccGain = ParseUtil.takeDouble(data);
+    // ccRampStepMax = ParseUtil.takeDouble(data);
+    // mFaultStopTimeMs = ParseUtil.takeInt32s(data);
+    // mDutyRampStep = ParseUtil.takeDouble(data);
+    // mCurrentBackoffGain = ParseUtil.takeDouble(data);
+    // mEncoderCounts = ParseUtil.takeInt32(data);
+    // mSensorPortMode = McSensorPortMode.values[ParseUtil.takeInt8(data)];
+    // mInvertDirection = ParseUtil.takeBoolean(data);
+    // mDrv8301OcMode = McDrv8301OcMode.values[ParseUtil.takeInt8(data)];
+    // mDrv8301OcAdj = ParseUtil.takeInt8(data);
+    // mBldcFSswMin = ParseUtil.takeDouble(data);
+    // mBldcFSwMax = ParseUtil.takeDouble(data);
+    // mDcFSw = ParseUtil.takeDouble(data);
+    // mNtcMotorBeta = ParseUtil.takeDouble(data);
+    // mOutAuxMode = McOutAuxMode.values[ParseUtil.takeInt8(data)];
+    // mMotorTempSensType = McTempSensorType.values[ParseUtil.takeInt8(data)];
+    // mPtcMotorCoeff = ParseUtil.takeDouble(data);
+    // mHallExtraSamples = ParseUtil.takeInt8(data);
+    // siMotorPoles = ParseUtil.takeInt8(data);
+    // siGearRatio = ParseUtil.takeDouble(data);
+    // siWheelDiameter = ParseUtil.takeDouble(data);
+    // siBatteryType = McBatteryType.values[ParseUtil.takeInt8(data)];
+    // siBatteryCells = ParseUtil.takeInt8(data);
+    // siBatteryAh = ParseUtil.takeDouble(data);
+    // bms = BmsConfig();
+    // bms.type = BmsType.values[ParseUtil.takeInt8(data)];
+    // bms.tLimitStart = ParseUtil.takeDouble2Byte(data, 100);
+    // bms.tLimitEnd = ParseUtil.takeDouble2Byte(data, 100);
+    // bms.socLimitStart = ParseUtil.takeDouble2Byte(data, 1000);
+    // bms.socLimitEnd = ParseUtil.takeDouble2Byte(data, 1000);
+
+    print("Serialized Motor Config, $serialized");
+    return serialized;
   }
 }
