@@ -88,6 +88,12 @@ class ParseUtil {
     return putInt16(buffer, data.toUnsigned(16));
   }
 
+  static putInt24(List<int> buffer, int data) {
+    buffer.add((data >> 16) & 0xff);
+    buffer.add((data >> 8) & 0xff);
+    buffer.add(data & 0xff);
+  }
+
   static putInt32(List<int> buffer, int data) {
     buffer.add(data >> 24);
     buffer.add((data >> 16) & 0xff);
