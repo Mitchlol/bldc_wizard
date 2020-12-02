@@ -20,7 +20,7 @@ class FWInfo{
     }
 
     if(data.length >= 12){
-      uuid = ParseUtil.takeInt8List(data);
+      uuid = ParseUtil.takeInt8List(data, 12);
     }
 
     if(data.length >= 1){

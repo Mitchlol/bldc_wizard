@@ -19,9 +19,9 @@ class ParseUtil {
     return takeInt8(data).toSigned(8);
   }
 
-  static List<int> takeInt8List(List<int> data) {
-    List<int> list = data.sublist(0, 12);
-    data.removeRange(0, 12);
+  static List<int> takeInt8List(List<int> data, int size) {
+    List<int> list = data.sublist(0, size);
+    data.removeRange(0, size);
     return list;
   }
 
@@ -73,11 +73,34 @@ class ParseUtil {
     buffer.add(data & 0xff);
   }
 
+  static putInt8List(List<int> buffer, List<int> data) {
+    for(int variable in data){
+      putInt8(buffer, variable);
+    }
+  }
+
+  static putInt16(List<int> buffer, int data) {
+    buffer.add((data >> 8) & 0xff);
+    buffer.add(data & 0xff);
+  }
+
+  static putInt16s(List<int> buffer, int data) {
+    return putInt16(buffer, data.toUnsigned(16));
+  }
+
   static putInt32(List<int> buffer, int data) {
     buffer.add(data >> 24);
     buffer.add((data >> 16) & 0xff);
     buffer.add((data >> 8) & 0xff);
     buffer.add(data & 0xff);
+  }
+
+  static putInt32s(List<int> buffer, int data) {
+    return putInt32(buffer, data.toUnsigned(32));
+  }
+
+  static putDouble2Byte(List<int> buffer, double data, int scale) {
+    return putInt16(buffer, (data*scale).truncate());
   }
 
   static putDouble(List<int> buffer, double number) {
@@ -98,6 +121,10 @@ class ParseUtil {
     }
 
     putInt32(buffer, res);
+  }
+
+  static putBoolean(List<int> buffer, bool data) {
+    return buffer.add(data? 1: 0);
   }
 
   static List frexp(double number) {
