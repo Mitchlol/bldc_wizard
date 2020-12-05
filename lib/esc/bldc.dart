@@ -21,8 +21,30 @@ class BLDC {
     state = this.uart.device.state;
   }
 
-  Future<Null> _sendIt(List<int> message) {
 
+  Future<bool> _sendIt(List<int> message) {
+    return _writePackets(_buildRequest(message));
+  }
+
+  Future<bool> _writePackets(List<int> request) async{
+    print("Write: request length = ${request.length}, splitting into ${(request.length/20).ceil()} packets");
+
+    bool failures = false;
+    while(request.isNotEmpty){
+      List<int> batch = request.take(20).toList();
+      print("Write batch: length = ${batch.length}, batch = $batch");
+      await uart.write(batch).then((value) {
+        print("Write Success!");
+      }, onError: (value) {
+        print("Write Fail! $value");
+        failures = true;
+      });
+      request.removeRange(0, batch.length);
+    }
+    return failures;
+  }
+
+  List<int> _buildRequest(List<int> message){
     // Calculate CRC
     CrcValue crc = Crc16Xmodem().convert(message);
     int crcint = int.parse(crc.toRadixString(10));
@@ -50,13 +72,9 @@ class BLDC {
     request.add(crcLow);
     request.add(0x03);
 
-    debugPrint("Final data = ${request.map((e) => e.toRadixString(16)).toList()}", wrapWidth: 1024);
+    debugPrint("Request = ${request.map((e) => e.toRadixString(16)).toList()}", wrapWidth: 1024);
 
-    return uart.write(request).then((value) {
-      print("Write Success!");
-    }, onError: (value) {
-      print("Write Fail! $value");
-    });
+    return request;
   }
 
   dynamic _onRecievePacket(List<int> packet) {
@@ -108,13 +126,14 @@ class BLDC {
   }
 
   dynamic onRecieveMessage(List<int> message) {
-    print("Message: $message");
     switch (CommCode.values[message.removeAt(0)]) {
       case CommCode.COMM_FW_VERSION:
         return FWInfo(message);
         break;
       case CommCode.COMM_GET_MCCONF:
-        return MotorConfig(message);
+        MotorConfig config = MotorConfig(message);
+        //Future.delayed(Duration(seconds: 1)).then((value) => writeMotorConfig(config));
+        return config;
         break;
       default:
         return null;
@@ -143,7 +162,3 @@ class BLDC {
     return _sendIt(data);
   }
 }
-
-// int PackSendPayload
-// (
-

@@ -54,8 +54,8 @@ class BLEUart {
     return true;
   }
 
-  Future<Null> write(List<int> value) {
-    return rxCharacteristic.write(value, withoutResponse: false);
+  Future<Null> write(List<int> value, {bool withoutResponse = false}) {
+    return rxCharacteristic.write(value, withoutResponse: withoutResponse);
   }
 
   Stream<List<int>> getDataStream() {

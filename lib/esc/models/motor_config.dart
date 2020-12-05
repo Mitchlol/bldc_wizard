@@ -392,13 +392,9 @@ class MotorConfig {
     bms.socLimitEnd = ParseUtil.takeDouble2Byte(data, 1000);
 
     print("Parsed Motor Config, MaxCurrent = $lCurrentMax, MinCurrent = $lCurrentMin, hall table = $hallTable");
-    serialize();
   }
 
   List<int> serialize(){
-
-    // lCurrentMax = 65.0;
-
     List<int> serialized = List<int>();
 
     ParseUtil.putInt32(serialized, signature);
@@ -537,9 +533,6 @@ class MotorConfig {
     ParseUtil.putDouble2Byte(serialized, bms.tLimitEnd, 100);
     ParseUtil.putDouble2Byte(serialized, bms.socLimitStart, 1000);
     ParseUtil.putDouble2Byte(serialized, bms.socLimitEnd, 1000);
-
-    // Testing
-    print("Serialized: $serialized");
 
     return serialized;
   }
