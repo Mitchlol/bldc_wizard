@@ -102,7 +102,7 @@ class BmsConfig {
 }
 
 class MotorConfig {
-  static final int MCCONF_SIGNATURE = 3199002916;
+  static final int MCCONF_SIGNATURE = 789840453;
 
   int signature; // uint32
   double lCurrentMax;

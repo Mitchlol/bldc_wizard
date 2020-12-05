@@ -126,16 +126,26 @@ class BLDC {
   }
 
   dynamic onRecieveMessage(List<int> message) {
-    switch (CommCode.values[message.removeAt(0)]) {
+    CommCode commCode = CommCode.values[message.removeAt(0)];
+    switch (commCode) {
       case CommCode.COMM_FW_VERSION:
         return FWInfo(message);
         break;
       case CommCode.COMM_GET_MCCONF:
         MotorConfig config = MotorConfig(message);
-        //Future.delayed(Duration(seconds: 1)).then((value) => writeMotorConfig(config));
+        // config.lCurrentMax = 45;
+        // config.lCurrentMin = -45;
+        // Future.delayed(Duration(seconds: 1)).then((value) => writeMotorConfig(config));
         return config;
         break;
+      case CommCode.COMM_PING_CAN:
+        if(message.isNotEmpty){
+          print("Found can devices $message");
+          _sendIt([CommCode.COMM_FORWARD_CAN.index, message[0], CommCode.COMM_FW_VERSION.index]);
+        }
+        break;
       default:
+        print("Unhandled message recieved: code = $commCode, message = $message");
         return null;
     }
   }
@@ -146,6 +156,14 @@ class BLDC {
 
   Future<bool> requestFirmwareInfo() {
     return _sendIt([CommCode.COMM_FW_VERSION.index]);
+  }
+
+  Future<bool> requestPingCan() {
+    return _sendIt([CommCode.COMM_PING_CAN.index]);
+  }
+
+  Future<bool> requestForwardCan(int canId) {
+    return _sendIt([CommCode.COMM_FORWARD_CAN.index, CommCode.COMM_FW_VERSION.index]);
   }
 
   Future<bool> requestGetValues() {

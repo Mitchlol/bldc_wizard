@@ -55,6 +55,10 @@ class _StartState extends State<StartPage> {
               onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestGetValues(),
               child: Text("Call get values"),
             ),
+            RaisedButton(
+              onPressed: () => Provider.of<Model>(context, listen: false).bldc.requestPingCan(),
+              child: Text("Call ping can"),
+            ),
           ],
         ),
       ),
