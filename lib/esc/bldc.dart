@@ -122,7 +122,7 @@ class BLDC {
   }
 
   Stream<T> getStream<T>() {
-    return responseStream.takeWhile((element) => element is T).cast<T>();
+    return responseStream.where((element) => element is T).cast<T>();
   }
 
   Future<bool> requestFirmwareInfo() {
