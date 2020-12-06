@@ -1,11 +1,11 @@
 import 'package:bldc_wizard/esc/bldc.dart';
 import 'package:bldc_wizard/esc/ble_uart.dart';
-import 'package:bldc_wizard/pages/start.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
 
 import '../model.dart';
+import 'devices.dart';
 
 class WelcomePage extends StatefulWidget {
   WelcomePage({Key key}) : super(key: key);
@@ -278,7 +278,7 @@ class _WelcomeState extends State<WelcomePage> {
       Navigator.push(
         _key.currentContext,
         MaterialPageRoute(builder: (context) {
-          return StartPage();
+          return DevicesPage();
         }),
       );
     }, onError: (error) {

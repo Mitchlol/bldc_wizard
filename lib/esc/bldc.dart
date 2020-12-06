@@ -1,10 +1,13 @@
 import 'package:bldc_wizard/esc/ble_uart.dart';
+import 'package:bldc_wizard/esc/models/can_ping.dart';
 import 'package:bldc_wizard/esc/models/fw_info.dart';
 import 'package:bldc_wizard/esc/models/motor_config.dart';
 import 'package:bldc_wizard/esc/parse_util.dart';
 import 'package:crclib/crclib.dart';
 import 'package:crclib/catalog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
+import 'package:rxdart/rxdart.dart';
 
 import './models/comm_code.dart';
 
@@ -13,24 +16,25 @@ class BLDC {
   List<int> _buffer;
 
   Stream responseStream;
-  Stream state;
+  BehaviorSubject<BluetoothDeviceState> state = BehaviorSubject<BluetoothDeviceState>();
 
   BLDC(BLEUart uart) {
     this.uart = uart;
     responseStream = this.uart.getDataStream().map(_onRecievePacket).where((it) => it != null).asBroadcastStream();
-    state = this.uart.device.state;
+    this.uart.device.state.listen((event) {
+      state.add(event);
+    });
   }
-
 
   Future<bool> _sendIt(List<int> message) {
     return _writePackets(_buildRequest(message));
   }
 
-  Future<bool> _writePackets(List<int> request) async{
-    print("Write: request length = ${request.length}, splitting into ${(request.length/20).ceil()} packets");
+  Future<bool> _writePackets(List<int> request) async {
+    print("Write: request length = ${request.length}, splitting into ${(request.length / 20).ceil()} packets");
 
     bool failures = false;
-    while(request.isNotEmpty){
+    while (request.isNotEmpty) {
       List<int> batch = request.take(20).toList();
       print("Write batch: length = ${batch.length}, batch = $batch");
       await uart.write(batch).then((value) {
@@ -44,7 +48,7 @@ class BLDC {
     return failures;
   }
 
-  List<int> _buildRequest(List<int> message){
+  List<int> _buildRequest(List<int> message) {
     // Calculate CRC
     CrcValue crc = Crc16Xmodem().convert(message);
     int crcint = int.parse(crc.toRadixString(10));
@@ -56,7 +60,7 @@ class BLDC {
 
     // Add message length
     int messageLength = message.length;
-    if(messageLength < 256){
+    if (messageLength < 256) {
       request.add(0x02);
       ParseUtil.putInt8(request, messageLength);
     } else if (messageLength < 65536) {
@@ -133,16 +137,10 @@ class BLDC {
         break;
       case CommCode.COMM_GET_MCCONF:
         MotorConfig config = MotorConfig(message);
-        // config.lCurrentMax = 45;
-        // config.lCurrentMin = -45;
-        // Future.delayed(Duration(seconds: 1)).then((value) => writeMotorConfig(config));
         return config;
         break;
       case CommCode.COMM_PING_CAN:
-        if(message.isNotEmpty){
-          print("Found can devices $message");
-          _sendIt([CommCode.COMM_FORWARD_CAN.index, message[0], CommCode.COMM_FW_VERSION.index]);
-        }
+        return CanPing(message);
         break;
       default:
         print("Unhandled message recieved: code = $commCode, message = $message");
@@ -154,29 +152,43 @@ class BLDC {
     return responseStream.where((element) => element is T).cast<T>();
   }
 
-  Future<bool> requestFirmwareInfo() {
-    return _sendIt([CommCode.COMM_FW_VERSION.index]);
+  Future<bool> requestFirmwareInfo({int canId}) {
+    List<int> message = [CommCode.COMM_FW_VERSION.index];
+    if (canId == null) {
+      return _sendIt(message);
+    } else {
+      return _requestForwardCan(canId, message);
+    }
   }
 
   Future<bool> requestPingCan() {
     return _sendIt([CommCode.COMM_PING_CAN.index]);
   }
 
-  Future<bool> requestForwardCan(int canId) {
-    return _sendIt([CommCode.COMM_FORWARD_CAN.index, CommCode.COMM_FW_VERSION.index]);
+  Future<bool> _requestForwardCan(int canId, List<int> message) {
+    return _sendIt([CommCode.COMM_FORWARD_CAN.index, canId] + message);
   }
 
   Future<bool> requestGetValues() {
     return _sendIt([CommCode.COMM_GET_VALUES.index]);
   }
 
-  Future<bool> requestMotorConfig() {
-    return _sendIt([CommCode.COMM_GET_MCCONF.index]);
+  Future<bool> requestMotorConfig({int canId}) {
+    List<int> message = [CommCode.COMM_GET_MCCONF.index];
+    if (canId == null) {
+      return _sendIt(message);
+    } else {
+      return _requestForwardCan(canId, message);
+    }
   }
 
-  Future<bool> writeMotorConfig(MotorConfig config){
-    List<int> data = config.serialize();
-    data.insert(0, CommCode.COMM_SET_MCCONF.index);
-    return _sendIt(data);
+  Future<bool> writeMotorConfig(MotorConfig config, {int canId}) {
+    List<int> message = config.serialize();
+    message.insert(0, CommCode.COMM_SET_MCCONF.index);
+    if (canId == null) {
+      return _sendIt(message);
+    } else {
+      return _requestForwardCan(canId, message);
+    }
   }
 }

@@ -30,6 +30,7 @@ dependencies:
 
   provider: ^4.3.2+2
   async: ^2.4.2
+  rxdart: ^0.24.1
 
   flutter_blue: ^0.7.3
   crclib: ^2.0.0
