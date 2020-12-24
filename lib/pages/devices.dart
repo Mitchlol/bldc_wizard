@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:bldc_wizard/esc/esc_state.dart';
 import 'package:bldc_wizard/esc/models/can_ping.dart';
 import 'package:bldc_wizard/esc/models/fw_info.dart';
@@ -29,41 +31,31 @@ class _DevicesState extends State<DevicesPage> {
         future: future,
         builder: (context, snapshot) {
           return Scaffold(
-              appBar: AppBar(title: Text("Connected ESCs"), actions: [ConnectionStateIndicator()]),
-              floatingActionButton: Padding(
-                padding: const EdgeInsets.only(bottom: 75),
-                child: FloatingActionButton(
-                  child: snapshot.connectionState == ConnectionState.done
-                      ? Icon(
-                          Icons.refresh,
-                        )
-                      : CircularProgressIndicator(
-                          valueColor: new AlwaysStoppedAnimation<Color>(Colors.grey),
-                        ),
-                  onPressed: snapshot.connectionState == ConnectionState.done
-                      ? () => setState(() {
-                            future = getAllDevices(context);
-                          })
-                      : null,
-                ),
-              ),
-              body: getBody(context, snapshot));
+            appBar: AppBar(title: Text("Connected ESCs"), actions: [ConnectionStateIndicator()]),
+            body: getBody(context, snapshot),
+          );
         });
   }
 
   Widget getBody(BuildContext buildContext, AsyncSnapshot snapshot) {
-    return SizedBox(
-      width: double.infinity,
-      height: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            getDevicesWidget(buildContext, snapshot),
-            Spacer(),
-            getStartButton(buildContext, snapshot),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        // mainAxisSize: MainAxisSize.min,
+        children: [
+          getDevicesWidget(buildContext, snapshot),
+          Spacer(),
+          Row(
+            children: [
+              getRefreshButton(buildContext, snapshot),
+              SizedBox(
+                width: 8,
+                height: 60,
+              ),
+              getStartButton(buildContext, snapshot),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -147,24 +139,44 @@ class _DevicesState extends State<DevicesPage> {
     );
   }
 
+  Widget getRefreshButton(BuildContext buildContext, AsyncSnapshot snapshot) {
+    return SizedBox(
+      height: 60,
+      child: ElevatedButton(
+        onPressed: snapshot.connectionState != ConnectionState.done
+            ? null
+            : () {
+                setState(() {
+                  future = getAllDevices(context);
+                });
+              },
+        child: Icon(
+          Icons.refresh,
+          size: 40,
+        ),
+      ),
+    );
+  }
+
   Widget getStartButton(BuildContext buildContext, AsyncSnapshot snapshot) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return Expanded(
       child: SizedBox(
-        width: double.infinity,
         height: 60,
         child: ElevatedButton(
           onPressed: snapshot.connectionState != ConnectionState.done || !Provider.of<Model>(context, listen: false).isValid()
               ? null
               : () {
-            Navigator.push(
-              buildContext,
-              MaterialPageRoute(builder: (context) {
-                return StartPage();
-              }),
-            );
-          },
-          child:Text(
+                  Navigator.push(
+                    buildContext,
+                    MaterialPageRoute(
+                      settings: RouteSettings(name: (StartPage).toString()),
+                      builder: (context) {
+                        return StartPage();
+                      },
+                    ),
+                  );
+                },
+          child: Text(
             "Start",
             style: TextStyle(
               fontSize: 24,

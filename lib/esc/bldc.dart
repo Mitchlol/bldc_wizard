@@ -10,6 +10,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:rxdart/rxdart.dart';
 
 import './models/comm_code.dart';
+import 'models/motor_config_set.dart';
 
 class BLDC {
   BLEUart uart;
@@ -134,6 +135,10 @@ class BLDC {
     switch (commCode) {
       case CommCode.COMM_FW_VERSION:
         return FWInfo(message);
+        break;
+      case CommCode.COMM_SET_MCCONF:
+        MotorConfigSet empty = MotorConfigSet(message);
+        return empty;
         break;
       case CommCode.COMM_GET_MCCONF:
         MotorConfig config = MotorConfig(message);

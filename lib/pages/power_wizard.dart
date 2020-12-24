@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../model.dart';
+import 'config_writer.dart';
 
 class PowerWizardPage extends StatefulWidget {
   PowerWizardPage({Key key}) : super(key: key);
@@ -38,7 +39,7 @@ class _PowerWizardState extends State<PowerWizardPage> {
       child: Column(
         children: [
           getValueAdjuster("Motor Max Current", lCurrentMax, 0, "A", [-5, -1, 1, 5], 0, 0, 10000),
-          getValueAdjuster("Motor Min Current", lCurrentMin, 0, "A", [-5, -1, 1, 5], 0, -10000, 0),
+          getValueAdjuster("Motor Min Current", lCurrentMin, 0, "A", [5, 1, -1, -5], 0, -10000, 0),
           Spacer(),
           getWriteButton(context)
         ],
@@ -70,19 +71,21 @@ class _PowerWizardState extends State<PowerWizardPage> {
     );
   }
 
-  Future writeMotorConfigs(BuildContext context) async {
+  writeMotorConfigs(BuildContext context) {
     Model model = Provider.of<Model>(context, listen: false);
 
     for (int canId in model.devices.keys){
       MotorConfig config = model.devices[canId].motorConfig;
       config.lCurrentMax = lCurrentMax.value;
       config.lCurrentMin = lCurrentMin.value;
-      if(canId == -1){
-        await model.bldc.writeMotorConfig(config);
-      }else{
-        await model.bldc.writeMotorConfig(config, canId: canId);
-      }
     }
+
+
+    Navigator.push(context,
+      MaterialPageRoute(builder: (context) {
+        return ConfigWriterPage();
+      }),
+    );
   }
 
   Widget getValueAdjuster(
