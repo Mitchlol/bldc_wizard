@@ -39,6 +39,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  flutter_launcher_icons: "^0.8.0"
+
+# Run 'flutter pub run flutter_launcher_icons:main' to generate app icons
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "res/icon/icon.png"
+  adaptive_icon_background: "res/icon/icon_android_bg.png"
+  adaptive_icon_foreground: "res/icon/icon_android_fg.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

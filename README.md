@@ -2,15 +2,14 @@
 
 A configuration wizard for ESCs running Benjamin Vedder's bldc firmware.
 
-## Getting Started
+## License
 
-This project is a starting point for a Flutter application.
+There currently is no license for this code base, that means you cant use it for anything.
+I will open source it at some point when i decide which license i want to use.
+If you need to use some of this code, contact me.
 
-A few resources to get you started if this is your first Flutter project:
+## Privacy Policy
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This app does not store or share any user data.
+Nearby bluetooth devices and your ESC's settings will be held in memory while the app is running.
+That is all.
