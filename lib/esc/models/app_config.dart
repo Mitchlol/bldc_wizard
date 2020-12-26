@@ -348,6 +348,15 @@ class AppConfig {
   int crc; //uint16_t
 
   AppConfig(List<int> data) {
+    // Initialize child objects
+    appPpmConf = PPMConfig();
+    appAdcConf = ADCConfig();
+    appChukConf = ChukConfig();
+    appNrfConf = NRFConfig();
+    appBalanceConf = BalanceConfig();
+    appPasConf = PasConfig();
+    imuConf = IMUConfig();
+
     // Check signature
     signature = ParseUtil.takeInt32(data);
     if (signature != APPCONF_SIGNATURE) {
@@ -370,7 +379,6 @@ class AppConfig {
     uavcanEscIndex = ParseUtil.takeInt8(data);
     uavcanRawMode = UAVCanRawMode.values[ParseUtil.takeInt8(data)];
     appToUse = AppUse.values[ParseUtil.takeInt8(data)];
-    appPpmConf = PPMConfig();
     appPpmConf.ctrlType = PpmControlType.values[ParseUtil.takeInt8(data)];
     appPpmConf.pidMaxErpm = ParseUtil.takeDouble(data);
     appPpmConf.hyst = ParseUtil.takeDouble(data);
@@ -390,7 +398,6 @@ class AppConfig {
     appPpmConf.maxErpmForDir = ParseUtil.takeDouble(data);
     appPpmConf.smartRevMaxDuty = ParseUtil.takeDouble(data);
     appPpmConf.smartRevRampTime = ParseUtil.takeDouble(data);
-    appAdcConf = ADCConfig();
     appAdcConf.ctrlType = ADCControlType.values[ParseUtil.takeInt8(data)];
     appAdcConf.hyst = ParseUtil.takeDouble(data);
     appAdcConf.voltageStart = ParseUtil.takeDouble(data);
@@ -414,7 +421,6 @@ class AppConfig {
     appAdcConf.tcMaxDiff = ParseUtil.takeDouble(data);
     appAdcConf.updateRateHz = ParseUtil.takeInt16(data);
     appUartBaudrate = ParseUtil.takeInt32(data);
-    appChukConf = ChukConfig();
     appChukConf.ctrlType = ChukControlType.values[ParseUtil.takeInt8(data)];
     appChukConf.hyst = ParseUtil.takeDouble(data);
     appChukConf.rampTimePos = ParseUtil.takeDouble(data);
@@ -429,7 +435,6 @@ class AppConfig {
     appChukConf.useSmartRev = ParseUtil.takeBoolean(data);
     appChukConf.smartRevMaxDuty = ParseUtil.takeDouble(data);
     appChukConf.smartRevRampTime = ParseUtil.takeDouble(data);
-    appNrfConf = NRFConfig();
     appNrfConf.speed = NRFSpeed.values[ParseUtil.takeInt8(data)];
     appNrfConf.power = NRFPower.values[ParseUtil.takeInt8(data)];
     appNrfConf.crcType = NRFCRC.values[ParseUtil.takeInt8(data)];
@@ -438,7 +443,6 @@ class AppConfig {
     appNrfConf.channel = ParseUtil.takeInt8s(data);// Signed????
     appNrfConf.address = ParseUtil.takeInt8List(data, 3);
     appNrfConf.sendCrcAck = ParseUtil.takeBoolean(data);
-    appBalanceConf = BalanceConfig();
     appBalanceConf.kp = ParseUtil.takeDouble(data);
     appBalanceConf.ki = ParseUtil.takeDouble(data);
     appBalanceConf.kd = ParseUtil.takeDouble(data);
@@ -478,7 +482,6 @@ class AppConfig {
     appBalanceConf.setpointTargetFilter = ParseUtil.takeDouble(data);
     appBalanceConf.setpointFilterClamp = ParseUtil.takeDouble(data);
     appBalanceConf.kdPt1Frequency = ParseUtil.takeInt16(data);
-    appPasConf = PasConfig();
     appPasConf.ctrlType = PasControlType.values[ParseUtil.takeInt8(data)];
     appPasConf.sensorType = PasSensorType.values[ParseUtil.takeInt8(data)];
     appPasConf.currentScaling = ParseUtil.takeDouble2Byte(data, 1000);
@@ -490,7 +493,6 @@ class AppConfig {
     appPasConf.rampTimePos = ParseUtil.takeDouble2Byte(data, 100);
     appPasConf.rampTimeNeg =ParseUtil.takeDouble2Byte(data, 100);
     appPasConf.updateRateHz = ParseUtil.takeInt16(data);
-    imuConf = IMUConfig();
     imuConf.type = IMUType.values[ParseUtil.takeInt8(data)];
     imuConf.mode = AHRSMode.values[ParseUtil.takeInt8(data)];
     imuConf.sampleRateHz = ParseUtil.takeInt16(data);
@@ -511,6 +513,149 @@ class AppConfig {
 
   List<int> serialize() {
     List<int> serialized = List<int>();
+
+    ParseUtil.putInt32(serialized, signature);
+    ParseUtil.putInt8(serialized, controllerId);
+    ParseUtil.putInt32(serialized, timeoutMsec);
+    ParseUtil.putDouble(serialized, timeoutBrakeCurrent);
+    ParseUtil.putInt8(serialized, sendCanStatus.index);
+    ParseUtil.putInt16(serialized, sendCanStatusRateHz);
+    ParseUtil.putInt8(serialized, canBaudRate.index);
+    ParseUtil.putBoolean(serialized, pairingDone);
+    ParseUtil.putBoolean(serialized, permanentUartEnabled);
+    ParseUtil.putInt8(serialized, shutdownMode.index);
+    ParseUtil.putInt8(serialized, canMode.index);
+    ParseUtil.putInt8(serialized, uavcanEscIndex);
+    ParseUtil.putInt8(serialized, uavcanRawMode.index);
+    ParseUtil.putInt8(serialized, appToUse.index);
+    ParseUtil.putInt8(serialized, appPpmConf.ctrlType.index);
+    ParseUtil.putDouble(serialized, appPpmConf.pidMaxErpm);
+    ParseUtil.putDouble(serialized, appPpmConf.hyst);
+    ParseUtil.putDouble(serialized, appPpmConf.pulseStart);
+    ParseUtil.putDouble(serialized, appPpmConf.pulseEnd);
+    ParseUtil.putDouble(serialized, appPpmConf.pulseCenter);
+    ParseUtil.putBoolean(serialized, appPpmConf.medianFilter);
+    ParseUtil.putBoolean(serialized, appPpmConf.safeStart);
+    ParseUtil.putDouble(serialized, appPpmConf.throttleExp);
+    ParseUtil.putDouble(serialized, appPpmConf.throttleExpBrake);
+    ParseUtil.putInt8(serialized, appPpmConf.throttleExpMode.index);
+    ParseUtil.putDouble(serialized, appPpmConf.rampTimePos);
+    ParseUtil.putDouble(serialized, appPpmConf.rampTimeNeg);
+    ParseUtil.putBoolean(serialized, appPpmConf.multiEsc);
+    ParseUtil.putBoolean(serialized, appPpmConf.tc);
+    ParseUtil.putDouble(serialized, appPpmConf.tcMaxDiff);
+    ParseUtil.putDouble(serialized, appPpmConf.maxErpmForDir);
+    ParseUtil.putDouble(serialized, appPpmConf.smartRevMaxDuty);
+    ParseUtil.putDouble(serialized, appPpmConf.smartRevRampTime);
+    ParseUtil.putInt8(serialized, appAdcConf.ctrlType.index);
+    ParseUtil.putDouble(serialized, appAdcConf.hyst);
+    ParseUtil.putDouble(serialized, appAdcConf.voltageStart);
+    ParseUtil.putDouble(serialized, appAdcConf.voltageEnd);
+    ParseUtil.putDouble(serialized, appAdcConf.voltageCenter);
+    ParseUtil.putDouble(serialized, appAdcConf.voltage2Start);
+    ParseUtil.putDouble(serialized, appAdcConf.voltage2End);
+    ParseUtil.putBoolean(serialized, appAdcConf.useFilter);
+    ParseUtil.putBoolean(serialized, appAdcConf.safeStart);
+    ParseUtil.putBoolean(serialized, appAdcConf.ccButtonInverted);
+    ParseUtil.putBoolean(serialized, appAdcConf.revButtonInverted);
+    ParseUtil.putBoolean(serialized, appAdcConf.voltageInverted);
+    ParseUtil.putBoolean(serialized, appAdcConf.voltage2Inverted);
+    ParseUtil.putDouble(serialized, appAdcConf.throttleExp);
+    ParseUtil.putDouble(serialized, appAdcConf.throttleExpBrake);
+    ParseUtil.putInt8(serialized, appAdcConf.throttleExpMode.index);
+    ParseUtil.putDouble(serialized, appAdcConf.rampTimePos);
+    ParseUtil.putDouble(serialized, appAdcConf.rampTimeNeg);
+    ParseUtil.putBoolean(serialized, appAdcConf.multiEsc);
+    ParseUtil.putBoolean(serialized, appAdcConf.tc);
+    ParseUtil.putDouble(serialized, appAdcConf.tcMaxDiff);
+    ParseUtil.putInt16(serialized, appAdcConf.updateRateHz);
+    ParseUtil.putInt32(serialized, appUartBaudrate);
+    ParseUtil.putInt8(serialized, appChukConf.ctrlType.index);
+    ParseUtil.putDouble(serialized, appChukConf.hyst);
+    ParseUtil.putDouble(serialized, appChukConf.rampTimePos);
+    ParseUtil.putDouble(serialized, appChukConf.rampTimeNeg);
+    ParseUtil.putDouble(serialized, appChukConf.stickErpmPerSInCc);
+    ParseUtil.putDouble(serialized, appChukConf.throttleExp);
+    ParseUtil.putDouble(serialized, appChukConf.throttleExpBrake);
+    ParseUtil.putInt8(serialized, appChukConf.throttleExpMode.index);
+    ParseUtil.putBoolean(serialized, appChukConf.multiEsc);
+    ParseUtil.putBoolean(serialized, appChukConf.tc);
+    ParseUtil.putDouble(serialized, appChukConf.tcMaxDiff);
+    ParseUtil.putBoolean(serialized, appChukConf.useSmartRev);
+    ParseUtil.putDouble(serialized, appChukConf.smartRevMaxDuty);
+    ParseUtil.putDouble(serialized, appChukConf.smartRevRampTime);
+    ParseUtil.putInt8(serialized, appNrfConf.speed.index);
+    ParseUtil.putInt8(serialized, appNrfConf.power.index);
+    ParseUtil.putInt8(serialized, appNrfConf.crcType.index);
+    ParseUtil.putInt8(serialized, appNrfConf.retryDelay.index);
+    ParseUtil.putInt8s(serialized, appNrfConf.retries);// Signed????
+    ParseUtil.putInt8s(serialized, appNrfConf.channel);// Signed????
+    ParseUtil.putInt8List(serialized, appNrfConf.address);
+    ParseUtil.putBoolean(serialized, appNrfConf.sendCrcAck);
+    ParseUtil.putDouble(serialized, appBalanceConf.kp);
+    ParseUtil.putDouble(serialized, appBalanceConf.ki);
+    ParseUtil.putDouble(serialized, appBalanceConf.kd);
+    ParseUtil.putInt16(serialized, appBalanceConf.hertz);
+    ParseUtil.putDouble(serialized, appBalanceConf.faultPitch);
+    ParseUtil.putDouble(serialized, appBalanceConf.faultRoll);
+    ParseUtil.putDouble(serialized, appBalanceConf.faultDuty);
+    ParseUtil.putDouble(serialized, appBalanceConf.faultAdc1);
+    ParseUtil.putDouble(serialized, appBalanceConf.faultAdc2);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultDelayPitch);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultDelayRoll);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultDelayDuty);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultDelaySwitchHalf);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultDelaySwitchFull);
+    ParseUtil.putInt16(serialized, appBalanceConf.faultAdcHalfErpm);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackAngle);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackSpeed);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackDuty);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackHighVoltage);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackLowVoltage);
+    ParseUtil.putDouble(serialized, appBalanceConf.tiltbackConstant);
+    ParseUtil.putInt16(serialized, appBalanceConf.tiltbackConstantErpm);
+    ParseUtil.putDouble(serialized, appBalanceConf.startupPitchTolerance);
+    ParseUtil.putDouble(serialized, appBalanceConf.startupRollTolerance);
+    ParseUtil.putDouble(serialized, appBalanceConf.startupSpeed);
+    ParseUtil.putDouble(serialized, appBalanceConf.deadzone);
+    ParseUtil.putDouble(serialized, appBalanceConf.currentBoost);
+    ParseUtil.putBoolean(serialized, appBalanceConf.multiEsc);
+    ParseUtil.putDouble(serialized, appBalanceConf.yawKp);
+    ParseUtil.putDouble(serialized, appBalanceConf.yawKi);
+    ParseUtil.putDouble(serialized, appBalanceConf.yawKd);
+    ParseUtil.putDouble(serialized, appBalanceConf.rollSteerKp);
+    ParseUtil.putDouble(serialized, appBalanceConf.rollSteerErpmKp);
+    ParseUtil.putDouble(serialized, appBalanceConf.brakeCurrent);
+    ParseUtil.putDouble(serialized, appBalanceConf.yawCurrentClamp);
+    ParseUtil.putDouble(serialized, appBalanceConf.setpointPitchFilter);
+    ParseUtil.putDouble(serialized, appBalanceConf.setpointTargetFilter);
+    ParseUtil.putDouble(serialized, appBalanceConf.setpointFilterClamp);
+    ParseUtil.putInt16(serialized, appBalanceConf.kdPt1Frequency);
+    ParseUtil.putInt8(serialized, appPasConf.ctrlType.index);
+    ParseUtil.putInt8(serialized, appPasConf.sensorType.index);
+    ParseUtil.putDouble2Byte(serialized, appPasConf.currentScaling, 1000);
+    ParseUtil.putDouble2Byte(serialized, appPasConf.pedalRpmStart, 10);
+    ParseUtil.putDouble2Byte(serialized, appPasConf.pedalRpmEnd, 10);
+    ParseUtil.putBoolean(serialized, appPasConf.invertPedalDirection);
+    ParseUtil.putInt16(serialized, appPasConf.magnets);
+    ParseUtil.putBoolean(serialized, appPasConf.useFilter);
+    ParseUtil.putDouble2Byte(serialized, appPasConf.rampTimePos, 100);
+    ParseUtil.putDouble2Byte(serialized, appPasConf.rampTimeNeg, 100);
+    ParseUtil.putInt16(serialized, appPasConf.updateRateHz);
+    ParseUtil.putInt8(serialized, imuConf.type.index);
+    ParseUtil.putInt8(serialized, imuConf.mode.index);
+    ParseUtil.putInt16(serialized, imuConf.sampleRateHz);
+    ParseUtil.putDouble(serialized, imuConf.accelConfidenceDecay);
+    ParseUtil.putDouble(serialized, imuConf.mahonyKp);
+    ParseUtil.putDouble(serialized, imuConf.mahonyKi);
+    ParseUtil.putDouble(serialized, imuConf.madgwickBeta);
+    ParseUtil.putDouble(serialized, imuConf.rotRoll);
+    ParseUtil.putDouble(serialized, imuConf.rotPitch);
+    ParseUtil.putDouble(serialized, imuConf.rotYaw);
+    ParseUtil.putDoubleList(serialized,imuConf.accelOffsets);
+    ParseUtil.putDoubleList(serialized,imuConf.gyroOffsets);
+    ParseUtil.putDoubleList(serialized,imuConf.gyroOffsetCompFact);
+    ParseUtil.putDouble(serialized, imuConf.gyroOffsetCompClamp);
 
     return serialized;
   }

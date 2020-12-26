@@ -81,6 +81,10 @@ class ParseUtil {
     buffer.add(data & 0xff);
   }
 
+  static putInt8s(List<int> buffer, int data) {
+    return putInt8(buffer, data.toUnsigned(8));
+  }
+
   static putInt8List(List<int> buffer, List<int> data) {
     for (int variable in data) {
       putInt8(buffer, variable);
@@ -135,6 +139,12 @@ class ParseUtil {
     }
 
     putInt32(buffer, res);
+  }
+
+  static putDoubleList(List<int> buffer, List<double> data) {
+    for (double variable in data) {
+      putDouble(buffer, variable);
+    }
   }
 
   static putBoolean(List<int> buffer, bool data) {
