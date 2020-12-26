@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:bldc_wizard/esc/esc_state.dart';
+import 'package:bldc_wizard/esc/models/app_config.dart';
 import 'package:bldc_wizard/esc/models/can_ping.dart';
 import 'package:bldc_wizard/esc/models/fw_info.dart';
 import 'package:bldc_wizard/esc/models/motor_config.dart';
@@ -189,47 +190,62 @@ class _DevicesState extends State<DevicesPage> {
   }
 
   Future<Null> getAllDevices(BuildContext context) async {
-    print("Get all FwInfo");
-    Model model = Provider.of<Model>(context, listen: false);
+    try{
+      print("Get all FwInfo");
+      Model model = Provider.of<Model>(context, listen: false);
 
-    // Clear old data
-    model.devices.clear();
+      // Clear old data
+      model.devices.clear();
 
-    // Get local
-    model.devices[-1] = ESCState();
+      // Get local
+      model.devices[-1] = ESCState();
 
-    // Get local FW Info
-    model.bldc.requestFirmwareInfo();
-    model.devices[-1].fwInfo = await model.bldc.getStream<FWInfo>().first.timeout(Duration(seconds: 5));
-    print("Got local FWInfo ${model.devices[-1].fwInfo.uuid}");
+      // Get local FW Info
+      model.bldc.requestFirmwareInfo();
+      model.devices[-1].fwInfo = await model.bldc.getStream<FWInfo>().first.timeout(Duration(seconds: 5));
+      print("Got local FWInfo ${model.devices[-1].fwInfo.uuid}");
 
-    // Get motor config
-    model.bldc.requestMotorConfig();
-    model.devices[-1].motorConfig = await model.bldc.getStream<MotorConfig>().first.timeout(Duration(seconds: 5));
-    print("Got local motor config");
+      // Get motor config
+      model.bldc.requestMotorConfig();
+      model.devices[-1].motorConfig = await model.bldc.getStream<MotorConfig>().first.timeout(Duration(seconds: 5));
+      print("Got local MotorConfig");
 
-    // Scan Can Bus
-    model.bldc.requestPingCan();
-    CanPing canPing = await model.bldc.getStream<CanPing>().first.timeout(Duration(seconds: 5));
-    print("Got can device list ${canPing.canIds}");
+      model.bldc.requestAppConfig();
+      model.devices[-1].appConfig = await model.bldc.getStream<AppConfig>().first.timeout(Duration(seconds: 5));
+      print("Got local AppConfig");
 
-    // Get all can FW Infos
-    for (int canId in canPing.canIds) {
-      try {
-        model.bldc.requestFirmwareInfo(canId: canId);
-        FWInfo fwInfo = await model.bldc.getStream<FWInfo>().first.timeout(Duration(seconds: 5));
-        print("Got $canId FWInfo ${fwInfo.uuid}");
+      // Scan Can Bus
+      model.bldc.requestPingCan();
+      CanPing canPing = await model.bldc.getStream<CanPing>().first.timeout(Duration(seconds: 5));
+      print("Got can device list ${canPing.canIds}");
 
-        model.bldc.requestMotorConfig(canId: canId);
-        MotorConfig motorConfig = await model.bldc.getStream<MotorConfig>().first.timeout(Duration(seconds: 5));
-        print("Got $canId MotorConfig");
+      // Get all can FW Infos
+      for (int canId in canPing.canIds) {
+        try {
+          model.bldc.requestFirmwareInfo(canId: canId);
+          FWInfo fwInfo = await model.bldc.getStream<FWInfo>().first.timeout(Duration(seconds: 5));
+          print("Got $canId FWInfo ${fwInfo.uuid}");
 
-        model.devices[canId] = ESCState();
-        model.devices[canId].fwInfo = fwInfo;
-        model.devices[canId].motorConfig = motorConfig;
-      } catch (exception) {
-        print(exception);
+          model.bldc.requestMotorConfig(canId: canId);
+          MotorConfig motorConfig = await model.bldc.getStream<MotorConfig>().first.timeout(Duration(seconds: 5));
+          print("Got $canId MotorConfig");
+
+          model.bldc.requestAppConfig(canId: canId);
+          AppConfig appConfig = await model.bldc.getStream<AppConfig>().first.timeout(Duration(seconds: 5));
+          print("Got $canId AppConfig");
+
+          model.devices[canId] = ESCState();
+          model.devices[canId].fwInfo = fwInfo;
+          model.devices[canId].motorConfig = motorConfig;
+          model.devices[canId].appConfig = appConfig;
+        } catch (exception) {
+          print(exception);
+        }
       }
+    }catch (e, s){
+      print(e);
+      print(s);
     }
+
   }
 }

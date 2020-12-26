@@ -1,4 +1,5 @@
 import 'package:bldc_wizard/esc/ble_uart.dart';
+import 'package:bldc_wizard/esc/models/app_config.dart';
 import 'package:bldc_wizard/esc/models/can_ping.dart';
 import 'package:bldc_wizard/esc/models/fw_info.dart';
 import 'package:bldc_wizard/esc/models/motor_config.dart';
@@ -144,6 +145,10 @@ class BLDC {
         MotorConfig config = MotorConfig(message);
         return config;
         break;
+      case CommCode.COMM_GET_APPCONF:
+        AppConfig config = AppConfig(message);
+        return config;
+        break;
       case CommCode.COMM_PING_CAN:
         return CanPing(message);
         break;
@@ -190,6 +195,15 @@ class BLDC {
   Future<bool> writeMotorConfig(MotorConfig config, {int canId}) {
     List<int> message = config.serialize();
     message.insert(0, CommCode.COMM_SET_MCCONF.index);
+    if (canId == null) {
+      return _sendIt(message);
+    } else {
+      return _requestForwardCan(canId, message);
+    }
+  }
+
+  Future<bool> requestAppConfig({int canId}) {
+    List<int> message = [CommCode.COMM_GET_APPCONF.index];
     if (canId == null) {
       return _sendIt(message);
     } else {

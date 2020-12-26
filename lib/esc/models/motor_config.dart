@@ -80,6 +80,7 @@ enum McTempSensorType {
   TEMP_SENSOR_NTC_10K_25C,
   TEMP_SENSOR_PTC_1K_100C,
   TEMP_SENSOR_KTY83_122,
+  TEMP_SENSOR_NTC_100K_25C,
 }
 
 enum McBatteryType {
@@ -102,7 +103,7 @@ class BmsConfig {
 }
 
 class MotorConfig {
-  static final int MCCONF_SIGNATURE = 789840453;
+  static const int MCCONF_SIGNATURE = 1050464887;
 
   int signature; // uint32
   double lCurrentMax;
@@ -175,6 +176,8 @@ class MotorConfig {
   double focDutyDowmrampKi;
   double focOpenloopRpm;
   double focOpenloopRpmLow;
+  double focDGainScaleStart;
+  double focDGainScaleMaxMod;
   double focSlOpenloopHyst;
   double focSlOpenloopTime;
   double focSlOpenloopTimeLock;
@@ -249,6 +252,7 @@ class MotorConfig {
     // Check signature
     signature = ParseUtil.takeInt32(data);
     if (signature != MCCONF_SIGNATURE) {
+      print("Invalid MC Conf $signature");
       throw Exception("Invalid MC Conf signature $signature");
     } else {
       print("Valid MC Conf $signature");
@@ -319,6 +323,8 @@ class MotorConfig {
     focDutyDowmrampKi = ParseUtil.takeDouble(data);
     focOpenloopRpm = ParseUtil.takeDouble(data);
     focOpenloopRpmLow = ParseUtil.takeDouble2Byte(data, 1000);
+    focDGainScaleStart = ParseUtil.takeDouble(data);
+    focDGainScaleMaxMod = ParseUtil.takeDouble(data);
     focSlOpenloopHyst = ParseUtil.takeDouble2Byte(data, 100);
     focSlOpenloopTimeLock = ParseUtil.takeDouble2Byte(data, 100);
     focSlOpenloopTimeRamp = ParseUtil.takeDouble2Byte(data, 100);
@@ -463,6 +469,8 @@ class MotorConfig {
     ParseUtil.putDouble(serialized, focDutyDowmrampKi);
     ParseUtil.putDouble(serialized, focOpenloopRpm);
     ParseUtil.putDouble2Byte(serialized, focOpenloopRpmLow, 1000);
+    ParseUtil.putDouble(serialized, focDGainScaleStart);
+    ParseUtil.putDouble(serialized, focDGainScaleMaxMod);
     ParseUtil.putDouble2Byte(serialized, focSlOpenloopHyst, 100);
     ParseUtil.putDouble2Byte(serialized, focSlOpenloopTimeLock, 100);
     ParseUtil.putDouble2Byte(serialized, focSlOpenloopTimeRamp, 100);
@@ -616,6 +624,8 @@ class MotorConfig {
     focDutyDowmrampKi == config.focDutyDowmrampKi &&
     focOpenloopRpm == config.focOpenloopRpm &&
     focOpenloopRpmLow == config.focOpenloopRpmLow &&
+    focDGainScaleStart == config.focDGainScaleStart &&
+    focDGainScaleMaxMod == config.focDGainScaleMaxMod &&
     focSlOpenloopHyst == config.focSlOpenloopHyst &&
     focSlOpenloopTime == config.focSlOpenloopTime &&
     focSlOpenloopTimeLock == config.focSlOpenloopTimeLock &&

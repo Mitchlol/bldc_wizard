@@ -65,6 +65,14 @@ class ParseUtil {
     return sig * pow(2, e);
   }
 
+  static List<double> takeDoubleList(List<int> data, int size) {
+    List<double> list = List();
+    for (var i = 0; i < size; i++) {
+      list.add(takeDouble(data));
+    }
+    return list;
+  }
+
   static bool takeBoolean(List<int> data) {
     return data.removeAt(0) == 1;
   }
@@ -74,7 +82,7 @@ class ParseUtil {
   }
 
   static putInt8List(List<int> buffer, List<int> data) {
-    for(int variable in data){
+    for (int variable in data) {
       putInt8(buffer, variable);
     }
   }
@@ -106,7 +114,7 @@ class ParseUtil {
   }
 
   static putDouble2Byte(List<int> buffer, double data, int scale) {
-    return putInt16(buffer, (data*scale).truncate());
+    return putInt16(buffer, (data * scale).truncate());
   }
 
   static putDouble(List<int> buffer, double number) {
@@ -130,7 +138,7 @@ class ParseUtil {
   }
 
   static putBoolean(List<int> buffer, bool data) {
-    return buffer.add(data? 1: 0);
+    return buffer.add(data ? 1 : 0);
   }
 
   static List frexp(double number) {
